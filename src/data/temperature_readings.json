@@ -1,0 +1,48 @@
+{
+  "temperature_readings": [
+    {
+      "shipment_id": "SHP-002",
+      "vessel_id": "V-003",
+      "cargo_type": "pharmaceuticals",
+      "required_temp_min_c": 2,
+      "required_temp_max_c": 8,
+      "readings": [
+        { "timestamp": "2025-07-15T08:00:00Z", "temperature_c": 4.2, "location": "Hamburg – pre-load", "sensor_id": "SNS-V003-01", "status": "normal" },
+        { "timestamp": "2025-07-15T14:00:00Z", "temperature_c": 3.8, "location": "Hamburg – vessel hold", "sensor_id": "SNS-V003-01", "status": "normal" },
+        { "timestamp": "2025-07-16T02:00:00Z", "temperature_c": 4.1, "location": "North Sea – at sea", "sensor_id": "SNS-V003-01", "status": "normal" },
+        { "timestamp": "2025-07-17T14:00:00Z", "temperature_c": 9.2, "location": "Strait of Gibraltar – at sea", "sensor_id": "SNS-V003-01", "status": "excursion", "notes": "Temperature exceeded upper limit. Reefer unit alarm triggered." },
+        { "timestamp": "2025-07-18T02:00:00Z", "temperature_c": 8.5, "location": "Mediterranean Sea – at sea", "sensor_id": "SNS-V003-01", "status": "excursion", "notes": "Still above upper limit. Reefer compressor reset." },
+        { "timestamp": "2025-07-18T14:00:00Z", "temperature_c": 6.1, "location": "Suez Canal approach", "sensor_id": "SNS-V003-01", "status": "normal", "notes": "Temperature returned to range after reefer unit repair." },
+        { "timestamp": "2025-07-19T08:00:00Z", "temperature_c": 5.5, "location": "Red Sea – at sea", "sensor_id": "SNS-V003-01", "status": "normal" },
+        { "timestamp": "2025-07-20T08:00:00Z", "temperature_c": 4.9, "location": "Arabian Sea – at sea", "sensor_id": "SNS-V003-01", "status": "normal" }
+      ]
+    },
+    {
+      "shipment_id": "SHP-004",
+      "vessel_id": "V-004",
+      "cargo_type": "fresh_produce",
+      "required_temp_min_c": 8,
+      "required_temp_max_c": 13,
+      "readings": [
+        { "timestamp": "2025-07-08T10:00:00Z", "temperature_c": 10.5, "location": "Santos – pre-load", "sensor_id": "SNS-V004-02", "status": "normal" },
+        { "timestamp": "2025-07-08T18:00:00Z", "temperature_c": 11.0, "location": "Santos – vessel hold", "sensor_id": "SNS-V004-02", "status": "normal" },
+        { "timestamp": "2025-07-10T06:00:00Z", "temperature_c": 10.8, "location": "South Atlantic – at sea", "sensor_id": "SNS-V004-02", "status": "normal" },
+        { "timestamp": "2025-07-15T12:00:00Z", "temperature_c": 14.3, "location": "North Atlantic – at sea", "sensor_id": "SNS-V004-02", "status": "excursion", "notes": "Temperature above upper limit. Reefer showing reduced efficiency." },
+        { "timestamp": "2025-07-16T00:00:00Z", "temperature_c": 15.7, "location": "Approaching Bay of Biscay", "sensor_id": "SNS-V004-02", "status": "excursion", "notes": "Persistent excursion. Cargo quality at risk." },
+        { "timestamp": "2025-07-17T06:00:00Z", "temperature_c": 11.2, "location": "English Channel – at sea", "sensor_id": "SNS-V004-02", "status": "normal", "notes": "Reefer repaired. Temperature stabilised." }
+      ]
+    },
+    {
+      "shipment_id": "SHP-003",
+      "vessel_id": "V-001",
+      "cargo_type": "automotive_parts",
+      "required_temp_min_c": null,
+      "required_temp_max_c": null,
+      "readings": [
+        { "timestamp": "2025-07-12T09:00:00Z", "temperature_c": 18.5, "location": "Detroit – vessel hold ambient", "sensor_id": "SNS-V001-01", "status": "normal", "notes": "Ambient monitoring only (non-perishable cargo)." },
+        { "timestamp": "2025-07-14T12:00:00Z", "temperature_c": 21.2, "location": "North Atlantic – at sea", "sensor_id": "SNS-V001-01", "status": "normal" },
+        { "timestamp": "2025-07-16T06:00:00Z", "temperature_c": 19.8, "location": "Mid Atlantic – at sea", "sensor_id": "SNS-V001-01", "status": "normal" }
+      ]
+    }
+  ]
+}
