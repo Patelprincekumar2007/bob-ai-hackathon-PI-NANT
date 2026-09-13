@@ -2,7 +2,8 @@
 # Install: pip install -r requirements.txt
 # Python 3.11+ required
 
-# Part 1 runtime — standard library only, plus dotenv for .env loading
+# ── Part 1 ────────────────────────────────────────────────────────────────
+# Runtime: standard library only + dotenv
 python-dotenv==1.0.1
 
 # Testing
@@ -11,9 +12,10 @@ pytest>=8.0.0
 # IBM watsonx.ai SDK — uncomment when real credentials are available
 # ibm-watsonx-ai>=1.0.10
 
-# Part 2 — IBM Bob MCP server (Person 2 adds when ready)
+# ── Part 2 ────────────────────────────────────────────────────────────────
+# IBM Bob MCP Server — uncomment to enable the MCP server
 # mcp>=1.0.0
 
-# Part 3 — Streamlit dashboard (Person 3 adds when ready)
+# ── Part 3 — Streamlit dashboard (Person 3 adds when ready) ───────────────
 # streamlit>=1.35.0
 # pandas>=2.2.0

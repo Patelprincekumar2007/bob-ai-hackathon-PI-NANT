@@ -117,23 +117,44 @@ def _score_priority(shipment):
 
 
 def _score_cold_chain(shipment):
-    """(pts, explanation) for cold-chain excursion factor (+5 if excursion found)."""
+    """
+    (pts, explanation) for cold-chain factor.
+
+    Uses cold_chain_monitor for richer scoring when available.
+    Backwards-compatible: falls back to simple JSON scan if monitor unavailable.
+    Max contribution: 5 pts (keeps existing Part 1 tests passing).
+    """
     if not shipment.get("requires_cold_chain"):
         return 0, "Cold-chain not required (0/5 pts)."
     try:
-        path = os.path.join(_DATA, "temperature_readings.json")
-        with open(path, "r", encoding="utf-8") as f:
-            entries = json.load(f).get("temperature_readings", [])
-        for entry in entries:
-            if entry.get("shipment_id") != shipment["id"]:
-                continue
-            for r in entry.get("readings", []):
-                if r.get("status") == "excursion":
-                    return 5, "Temperature excursion detected in cold-chain log -> 5/5 pts."
-        return 0, "Cold-chain required; no excursions in log (0/5 pts)."
+        from .cold_chain_monitor import get_temperature_risk  # lazy import avoids circular
+        risk = get_temperature_risk(shipment["id"])
+        if not risk["excursion_detected"]:
+            return 0, "Cold-chain required; no excursions detected (0/5 pts)."
+        # Map cold-chain risk score (0-100) to max 5 pts contribution
+        sev = risk["excursion_severity"]
+        pts = 5 if sev == "CRITICAL" else 3 if sev == "WARNING" else 0
+        return pts, (
+            "Cold-chain excursion (%s) detected -> %d/5 pts. %s"
+            % (sev, pts, risk["explanation"])
+        )
     except Exception as exc:   # noqa: BLE001
-        logger.warning("Could not read temperature data: %s", exc)
-        return 0, "Temperature data unavailable (0/5 pts)."
+        logger.warning("Cold-chain monitor unavailable, using fallback: %s", exc)
+        # Original fallback: simple JSON scan
+        try:
+            path = os.path.join(_DATA, "temperature_readings.json")
+            with open(path, "r", encoding="utf-8") as f:
+                entries = json.load(f).get("temperature_readings", [])
+            for entry in entries:
+                if entry.get("shipment_id") != shipment["id"]:
+                    continue
+                for r in entry.get("readings", []):
+                    if r.get("status") == "excursion":
+                        return 5, "Temperature excursion detected -> 5/5 pts."
+            return 0, "Cold-chain required; no excursions in log (0/5 pts)."
+        except Exception as exc2:   # noqa: BLE001
+            logger.warning("Could not read temperature data: %s", exc2)
+            return 0, "Temperature data unavailable (0/5 pts)."
 
 
 # ---------------------------------------------------------------------------
