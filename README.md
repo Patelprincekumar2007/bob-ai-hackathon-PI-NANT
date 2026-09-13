@@ -1,62 +1,69 @@
-# 🚀 [Your Project Title Here]
+# SmartRoute AI
 
-> ⚠️ **Replace everything in `[ ]` brackets with your actual content before submission.**
+> AI-powered supply chain control tower — disruption detection, risk scoring, and route recommendations.
 
 ---
 
-## 👥 Team
+## Team
 
 | Field | Value |
 |---|---|
-| **Team Name** | [Your Team Name] |
-| **Track** | [AI / DevOps / Sustainability / Open] |
-| **Team Lead** | [Name] — [email@ibm.com] |
-| **Members** | [Name 1], [Name 2], [Name 3] |
+| **Team Name** | PI-NANT |
+| **Track** | AI |
+| **Team Lead** | Kashyap Nasit — 24cs109@charusat.edu.in |
+| **Members** | Kashyap Nasit, Patel Princekumar, Patel Rudrakumar |
 
 ---
 
-## 🎯 Problem Statement
+## Problem Statement
 
-> In 2–3 sentences: What problem does your project solve? Who experiences this problem?
-
-[Describe the real-world problem your project addresses. Be specific about who the user is and what pain point they face.]
+Supply chain operators managing global shipments face severe, costly disruptions — port congestion, extreme weather, strikes, and vessel failures — causing delays, cargo loss, and fleet under-utilisation. Manual rerouting across carrier portals takes hours and often occurs too late to prevent damage, especially for temperature-sensitive pharmaceutical and perishable cargo.
 
 ---
 
-## 💡 Solution
+## Solution
 
-> In 2–3 sentences: What did you build? How does it solve the problem above?
-
-[Describe your solution clearly. Explain the core mechanism — what makes it work.]
+SmartRoute AI is an AI-powered supply chain control tower that automatically detects active disruptions, scores every shipment's risk 0-100, and recommends alternative routes and carriers in real time. It monitors cold-chain temperature excursions, optimises fleet utilisation, and uses IBM watsonx.ai (via an IBM Bob MCP server) to generate plain-English explanations and escalation advice for logistics coordinators.
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-- **Feature 1:** [Brief description — e.g., "Real-time anomaly detection using watsonx.ai"]
-- **Feature 2:** [Brief description]
-- **Feature 3:** [Brief description]
-- **Feature 4:** [Optional]
-- **Feature 5:** [Optional]
+- **Real-time shipment risk scoring (0-100)** with CRITICAL/HIGH/MEDIUM/LOW classification
+- **Automated disruption detection** across port, weather, strike, and vessel events
+- **Alternative route and carrier recommendations** with delay and cost estimates
+- **Cold-chain temperature monitoring** with excursion alerts and risk scoring
+- **IBM Bob MCP integration** with 7 tools for natural-language supply chain queries
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Category | Technologies |
 |---|---|
-| **Languages** | [e.g., Python, TypeScript] |
-| **Frameworks** | [e.g., FastAPI, React] |
-| **IBM Technologies** | [e.g., watsonx.ai, IBM Bob, IBM Cloud] |
-| **Databases** | [e.g., PostgreSQL, Redis] |
-| **Other** | [e.g., Docker, GitHub Actions] |
+| **Languages** | Python |
+| **Frameworks** | Streamlit |
+| **IBM Technologies** | watsonx.ai, IBM Bob, IBM Bob MCP Server |
+| **Databases** | None — JSON mock data |
+| **Other** | python-dotenv, pytest, GitHub Actions |
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 ├── src/                  # All source code
+│   ├── app.py            # Streamlit dashboard (Part 3)
+│   ├── mcp_server.py     # IBM Bob MCP server (Part 2)
+│   ├── core/             # Core logic modules
+│   │   ├── disruption_detector.py
+│   │   ├── risk_engine.py
+│   │   ├── route_advisor.py
+│   │   ├── fleet_optimizer.py
+│   │   ├── cold_chain_monitor.py
+│   │   └── watsonx_client.py
+│   ├── data/             # JSON mock data files
+│   └── requirements.txt
 ├── docs/                 # Written documentation
 │   ├── problem-statement.md
 │   ├── solution-overview.md
@@ -64,58 +71,63 @@
 │   └── setup-guide.md
 ├── demo/                 # Demo artifacts
 │   ├── screenshots/      # App screenshots
-│   └── demo-video-link.txt  # Link to demo video
+│   └── demo-video-link.txt
+├── tests/                # Pytest test suite (127+ tests)
 ├── presentation/         # Slide deck
 └── submission.yaml       # Structured submission metadata
 ```
 
 ---
 
-## ⚡ How to Run
-
-> **Copy these exact steps from your [`docs/setup-guide.md`](docs/setup-guide.md)**
+## How to Run
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/[your-repo].git
-cd [your-repo]
+git clone <repo-url>
+cd bob-ai-hackathon-PI-NANT
 
-# 2. Install dependencies
-[your install command here]
+# 2. Create and activate a virtual environment
+python -m venv .venv
+# Windows:
+.venv\Scripts\activate
+# macOS/Linux:
+source .venv/bin/activate
 
-# 3. Configure environment
-cp .env.example .env
-# Edit .env with your values
+# 3. Install dependencies
+pip install -r src/requirements.txt
 
-# 4. Run the project
-[your run command here]
+# 4. (Optional) Configure watsonx.ai credentials
+cp src/.env.example src/.env
+# Edit src/.env — leave blank to run in Demo Mode
+
+# 5. Run the Streamlit dashboard
+streamlit run src/app.py
 ```
+
+The app opens at **http://localhost:8501** — no credentials needed for Demo Mode.
 
 ---
 
-## 🖥️ Demo
+## Demo
 
 | Artifact | Link |
 |---|---|
-| 📹 Demo Video | [See demo/demo-video-link.txt](demo/demo-video-link.txt) |
-| 🌐 Live Demo | [See demo/live-demo-url.txt](demo/live-demo-url.txt) |
-| 🖼️ Screenshots | [See demo/screenshots/](demo/screenshots/) |
-| 📊 Presentation | [See presentation/slides.pdf](presentation/) |
+| Demo Video | [See demo/demo-video-link.txt](demo/demo-video-link.txt) |
+| Live Demo | [See demo/live-demo-url.txt](demo/live-demo-url.txt) |
+| Screenshots | [See demo/screenshots/](demo/screenshots/) |
+| Presentation | [See presentation/](presentation/) |
 
 ---
 
-## ⚠️ Known Limitations
+## Known Limitations
 
-> Be honest — judges appreciate transparency over overclaiming.
-
-- [Limitation 1: e.g., "Authentication is mocked — not production-ready"]
-- [Limitation 2: e.g., "Only tested on Chrome"]
-- [Limitation 3: e.g., "Feature X is scaffolded but not fully implemented"]
-
----
-
-## 🏅 What We're Most Proud Of
-
-[Tell the judges what part of your submission is strongest and worth paying close attention to.]
+- Route recommendations use a curated static knowledge base, not live carrier APIs
+- watsonx.ai explanations fall back to mock text when credentials are not configured
+- Temperature data is from mock IoT sensor readings, not live sensors
+- No authentication or user management (demo only)
 
 ---
+
+## What We're Most Proud Of
+
+The end-to-end operator workflow from disruption detection to AI-powered recommendation, and the IBM Bob MCP integration that lets a logistics coordinator query the entire supply chain system in natural language.

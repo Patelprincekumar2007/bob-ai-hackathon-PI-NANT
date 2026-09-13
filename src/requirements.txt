@@ -16,6 +16,6 @@ pytest>=8.0.0
 # IBM Bob MCP Server — uncomment to enable the MCP server
 # mcp>=1.0.0
 
-# ── Part 3 — Streamlit dashboard (Person 3 adds when ready) ───────────────
-# streamlit>=1.35.0
-# pandas>=2.2.0
+# ── Part 3 — Streamlit dashboard ──────────────────────────────────────────
+streamlit>=1.35.0
+pandas>=2.2.0

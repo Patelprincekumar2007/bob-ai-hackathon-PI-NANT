@@ -1,26 +1,26 @@
 # Screenshots
 
-Place your application screenshots in this folder.
+Place your application screenshots in this folder before submission.
 
-## Naming Convention
+## Screenshots to Capture
 
-Name your screenshots sequentially so they appear in logical order:
+| Filename | Description |
+|---|---|
+| `01-home-dashboard.png` | Main dashboard with KPI cards (Total Shipments, At-Risk, Critical, Active Disruptions, Available Vehicles, Fleet Utilisation, Cold-Chain Alerts) and the top at-risk shipments table |
+| `02-shipment-analysis.png` | Shipment detail view with risk score breakdown, active disruptions, route alternatives, vehicle recommendation, and the AI Explanation button |
+| `03-fleet-cold-chain.png` | Fleet utilisation view showing per-vehicle load percentage table, and the Cold Chain page with temperature excursion alerts and the temperature history line chart |
 
-  01-landing-page.png       ← First thing a user sees
-  02-main-feature.png       ← Your primary feature in action
-  03-output-or-results.png  ← The result / value delivered
-  04-additional-feature.png ← Any other notable screen
+## How to Take Screenshots
+
+1. Run `streamlit run src/app.py`
+2. Navigate to each page and select representative data
+3. For `01-home-dashboard.png`: screenshot the Dashboard page with all KPI metrics visible
+4. For `02-shipment-analysis.png`: select a CRITICAL or HIGH risk shipment on the Shipments page to show the full detail panel
+5. For `03-fleet-cold-chain.png`: screenshot the Fleet page with the vehicle table visible, or the Cold Chain page showing an excursion alert and chart
 
 ## Requirements
 
 - Minimum: 3 screenshots
 - Format: PNG or JPG
-- Show the application running with real (or realistic mock) data
-- Avoid screenshots of empty states or placeholder data
-- Captions are not required but appreciated
-
-## Tips
-
-- Use a consistent browser window size across all screenshots
-- Highlight key UI elements with arrows/circles if helpful (use any image editor)
-- Include a screenshot showing IBM technology integration if applicable
+- Show the application running with real mock data (the JSON data files are pre-populated)
+- Avoid screenshots of empty or error states
