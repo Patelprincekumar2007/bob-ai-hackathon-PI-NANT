@@ -1,69 +1,69 @@
-# =============================================================================
-# HACKATHON SUBMISSION METADATA
-# =============================================================================
-# Instructions:
-#   - Fill in ALL required fields (marked with # REQUIRED)
-#   - Optional fields can be left as empty strings ""
-#   - Do NOT rename this file — the evaluation pipeline reads it by name
-#   - Use double quotes around all string values
-# =============================================================================
-
 team:
-  name: ""                             # REQUIRED — e.g., "Orion Squad"
-  track: ""                            # REQUIRED — one of: AI | DevOps | Sustainability | Open
+  name: "PI-NANT"
+  track: "AI"
   lead:
-    name: ""                           # REQUIRED — e.g., "Alice Chen"
-    email: ""                          # REQUIRED — e.g., "alice.chen@ibm.com"
+    name: "Kashyap Nasit"
+    email: "24cs109@charusat.edu.in"
   members:
-    - name: ""                         # REQUIRED — Team member 1
-      email: ""
-    - name: ""                         # Add more members by copying the two lines above
-      email: ""
-    - name: ""
-      email: ""
+    - name: "Patel Princekumar"
+      email: "24cs073@charusat.edu.in"
+    - name: "Patel Rudrakumar"
+      email: "24cs074@charusat.edu.in"
 
 submission:
-  title: ""                            # REQUIRED — Project display name, e.g., "SmartOps Dashboard"
+  title: "SmartRoute AI - Supply Chain Disruption Assistant"
 
-  problem_statement: >                 # REQUIRED — 1-3 sentences. What problem? Who has it?
-    Replace this text with a concise description of the real-world problem
-    your project addresses and who experiences it.
+  problem_statement: >
+    Supply chain teams need to quickly identify shipments affected by disruptions,
+    assess their risk, find alternative routes and vehicles, and monitor
+    temperature-sensitive cargo. Manual analysis across disruption, shipment,
+    fleet, and cold-chain data can delay decisions and increase operational risk.
 
-  solution_summary: >                  # REQUIRED — 1-3 sentences. What did you build?
-    Replace this text with a clear description of your solution
-    and how it addresses the problem above.
+  solution_summary: >
+    SmartRoute AI is an AI-powered supply chain disruption assistant that combines
+    shipment risk analysis, disruption detection, route and vehicle recommendations,
+    fleet optimisation, and cold-chain monitoring in one Streamlit dashboard.
+    IBM watsonx.ai provides AI-generated shipment explanations, with a clearly
+    labelled demo fallback when credentials are not configured.
 
-  key_features:                        # REQUIRED — List 3 to 5 specific features you implemented
-    - ""                               # e.g., "Real-time pipeline anomaly detection using watsonx.ai"
-    - ""
-    - ""
-    - ""                               # optional 4th
-    - ""                               # optional 5th
+  key_features:
+    - "Shipment disruption detection and 0-100 risk scoring"
+    - "Alternative route recommendations based on active disruptions"
+    - "Fleet and vehicle optimisation with capacity and reefer requirements"
+    - "Cold-chain temperature monitoring and excursion severity detection"
+    - "AI-powered shipment explanations using IBM watsonx.ai"
 
   tech_stack:
-    languages: []                      # REQUIRED — e.g., ["Python", "TypeScript"]
-    frameworks: []                     # e.g., ["FastAPI", "React"]
-    ibm_technologies: []               # e.g., ["watsonx.ai", "IBM Bob", "IBM Cloud Functions"]
-    databases: []                      # e.g., ["PostgreSQL", "Redis"]
-    other: []                          # e.g., ["Docker", "GitHub Actions", "Slack API"]
+    languages:
+      - "Python"
+    frameworks:
+      - "Streamlit"
+    ibm_technologies:
+      - "IBM watsonx.ai"
+      - "IBM Bob"
+    databases: []
+    other:
+      - "Model Context Protocol (MCP)"
+      - "GitHub Actions"
+      - "JSON"
 
-  what_we_are_most_proud_of: >         # Optional but recommended — guides judges to your best work
-    Replace with what aspect of the submission you consider strongest
-    and want judges to pay special attention to.
+  what_we_are_most_proud_of: >
+    We are most proud of integrating the complete supply chain decision workflow
+    into one working application, from disruption detection and risk scoring to
+    route and vehicle recommendations and cold-chain monitoring. We also
+    implemented an MCP server exposing seven tools for AI-assisted interaction.
 
-  known_limitations: >                 # Optional but recommended — be honest about gaps
-    Replace with any known limitations, incomplete features,
-    or shortcuts taken due to time constraints.
+  known_limitations: >
+    The application currently uses local JSON datasets for demonstration and
+    does not have a live production deployment. IBM watsonx.ai requires valid
+    credentials for real AI inference; otherwise the application uses a clearly
+    labelled deterministic demo fallback.
 
-# =============================================================================
-# ARTIFACT LOCATIONS
-# These paths are relative to the repo root. Only change if you moved files.
-# =============================================================================
 artifacts:
   source_code: "src/"
   setup_guide: "docs/setup-guide.md"
   architecture_doc: "docs/architecture.md"
-  demo_video: "demo/demo-video-link.txt"   # URL to hosted video (YouTube, Loom, Box)
-  live_demo: "demo/live-demo-url.txt"      # URL to deployed demo (optional)
+  demo_video: "demo/demo-video-link.txt"
+  live_demo: "demo/live-demo-url.txt"
   screenshots: "demo/screenshots/"
   presentation: "presentation/"
