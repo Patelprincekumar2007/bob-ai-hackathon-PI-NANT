@@ -37,11 +37,22 @@ _MOCK_TAG = "[MOCK - set WATSONX_API_KEY and WATSONX_PROJECT_ID to enable real A
 # Internal helpers
 # ---------------------------------------------------------------------------
 
+try:
+    from dotenv import load_dotenv
+    _dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    env_path = os.path.join(_dir, ".env")
+    if os.path.exists(env_path):
+        load_dotenv(env_path)
+    else:
+        load_dotenv()
+except Exception:
+    pass
+
 def _credentials():
     """Return credentials dict or None if not configured."""
-    key = os.environ.get("WATSONX_API_KEY", "").strip()
+    key = (os.environ.get("WATSONX_API_KEY") or os.environ.get("WATSONX_APIKEY") or "").strip()
     pid = os.environ.get("WATSONX_PROJECT_ID", "").strip()
-    if not key or not pid:
+    if not key or not pid or key == "your_api_key_here" or pid == "your_project_id_here":
         return None
     return {
         "api_key": key,
