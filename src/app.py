@@ -86,33 +86,166 @@ html, body,
   font-family: 'Inter', system-ui, sans-serif !important;
 }
 
-/* ── Main content padding ── */
-[data-testid="stMain"] > div {
-  padding-top: 1.5rem !important;
-}
-
-section[data-testid="stMainBlockContainer"] {
-  padding: 0 2rem 2rem 2rem !important;
-  max-width: 1400px !important;
-}
-
-/* ── Sidebar ── */
-[data-testid="stSidebar"] {
-  background: #080C17 !important;
-  border-right: 1px solid rgba(56,189,248,0.08) !important;
-}
-[data-testid="stSidebar"] > div {
-  padding: 0 !important;
-}
-[data-testid="stSidebarContent"] {
-  padding: 0 !important;
+/* ── Hide sidebar entirely ── */
+[data-testid="stSidebar"],
+[data-testid="stSidebarNav"],
+[data-testid="stSidebarContent"],
+[data-testid="collapsedControl"],
+section[data-testid="stSidebar"] {
+  display: none !important;
+  width: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 /* ── Hide Streamlit chrome ── */
 #MainMenu, footer, [data-testid="stToolbar"],
-[data-testid="stDecoration"] {
+[data-testid="stDecoration"],
+[data-testid="stHeader"],
+header[data-testid="stHeader"] {
   visibility: hidden !important;
+  display: none !important;
   height: 0 !important;
+  pointer-events: none !important;
+}
+
+/* ── Main content: no top gap since our nav is inline ── */
+[data-testid="stMain"] > div {
+  padding-top: 0 !important;
+}
+section[data-testid="stMainBlockContainer"] {
+  padding: 0.5rem 2.2rem 2rem 2.2rem !important;
+  max-width: 1440px !important;
+}
+
+/* ═══════════════════════════════════════════════════
+   TOP NAV BAR
+═══════════════════════════════════════════════════ */
+.sr-topnav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(13,20,36,0.97);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  padding: 0 28px;
+  height: 64px;
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+  margin-bottom: 0;
+  gap: 20px;
+}
+.sr-topnav-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  min-width: 190px;
+}
+.sr-topnav-logo {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, #38BDF8 0%, #818CF8 100%);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+  box-shadow: 0 4px 14px rgba(56,189,248,0.35);
+  flex-shrink: 0;
+}
+.sr-topnav-name {
+  display: flex; flex-direction: column; line-height: 1;
+}
+.sr-topnav-title {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #F1F5F9;
+  letter-spacing: -0.01em;
+}
+.sr-topnav-sub {
+  font-size: 0.6rem;
+  color: #475569;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  margin-top: 2px;
+}
+.sr-topnav-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  justify-content: center;
+}
+.sr-topnav-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 18px;
+  border-radius: 9px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748B;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.18s ease;
+  text-decoration: none !important;
+  white-space: nowrap;
+  background: transparent;
+}
+.sr-topnav-tab:hover {
+  color: #94A3B8;
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.06);
+}
+.sr-topnav-tab.active {
+  color: #38BDF8;
+  background: rgba(56,189,248,0.1);
+  border-color: rgba(56,189,248,0.25);
+  box-shadow: 0 0 12px rgba(56,189,248,0.15);
+}
+.sr-topnav-tab-icon {
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+.sr-topnav-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  min-width: 190px;
+  justify-content: flex-end;
+}
+.sr-demo-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(251,191,36,0.12);
+  border: 1px solid rgba(251,191,36,0.3);
+  border-radius: 99px;
+  padding: 4px 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #FBBF24;
+  letter-spacing: 0.02em;
+}
+.sr-demo-pill-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #FBBF24;
+  box-shadow: 0 0 6px #FBBF24;
+  animation: pulse-dot 2s infinite;
+}
+.sr-team-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #475569;
+  letter-spacing: 0.02em;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
 }
 
 /* ── Headings ── */
@@ -131,7 +264,7 @@ hr {
   margin: 20px 0 !important;
 }
 
-/* ── Buttons ── */
+/* ── Buttons (general) ── */
 .stButton > button {
   background: linear-gradient(135deg, #38BDF8 0%, #818CF8 100%) !important;
   color: #070B14 !important;
@@ -151,6 +284,50 @@ hr {
 }
 .stButton > button:active {
   transform: translateY(0) !important;
+}
+
+/* ── Top-nav tab buttons ── */
+/* secondary = inactive tab */
+[data-testid="stBaseButton-secondary"] > button,
+button[data-testid="stBaseButton-secondary"] {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 9px !important;
+  color: #64748B !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  padding: 8px 14px !important;
+  box-shadow: none !important;
+  transition: all 0.18s ease !important;
+  letter-spacing: 0 !important;
+}
+[data-testid="stBaseButton-secondary"] > button:hover,
+button[data-testid="stBaseButton-secondary"]:hover {
+  background: rgba(255,255,255,0.05) !important;
+  color: #CBD5E1 !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+/* primary = active tab */
+[data-testid="stBaseButton-primary"] > button,
+button[data-testid="stBaseButton-primary"] {
+  background: rgba(56,189,248,0.12) !important;
+  border: 1px solid rgba(56,189,248,0.35) !important;
+  border-radius: 9px !important;
+  color: #38BDF8 !important;
+  font-size: 0.875rem !important;
+  font-weight: 700 !important;
+  padding: 8px 14px !important;
+  box-shadow: 0 0 12px rgba(56,189,248,0.15) !important;
+  transition: all 0.18s ease !important;
+  letter-spacing: 0 !important;
+}
+[data-testid="stBaseButton-primary"] > button:hover,
+button[data-testid="stBaseButton-primary"]:hover {
+  background: rgba(56,189,248,0.2) !important;
+  box-shadow: 0 0 18px rgba(56,189,248,0.25) !important;
+  transform: none !important;
 }
 
 /* ── Selectbox ── */
@@ -272,142 +449,35 @@ details[data-testid="stExpander"] > div {
   margin-bottom: 10px;
   box-shadow: 0 4px 12px rgba(56,189,248,0.3);
 }
-.sr-sidebar-brand {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: #F1F5F9;
-  letter-spacing: -0.01em;
-  line-height: 1.2;
-}
-.sr-sidebar-tagline {
-  font-size: 0.65rem;
-  color: #475569;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-top: 2px;
-  font-weight: 600;
-}
-
-.sr-nav-label {
-  font-size: 0.62rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: #334155;
-  font-weight: 700;
-  padding: 14px 20px 6px;
-}
-
-.sr-ai-status {
-  margin: 12px 16px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: rgba(56,189,248,0.06);
-  border: 1px solid rgba(56,189,248,0.12);
-}
-.sr-ai-status-live {
-  background: rgba(52,211,153,0.06);
-  border-color: rgba(52,211,153,0.15);
-}
-.sr-ai-dot {
-  display: inline-block;
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: #34D399;
-  box-shadow: 0 0 6px #34D399;
-  margin-right: 7px;
-  animation: pulse-dot 2s infinite;
-}
-.sr-ai-dot-demo {
-  background: #FBBF24;
-  box-shadow: 0 0 6px #FBBF24;
-}
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.4; }
-}
-.sr-ai-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #34D399;
-  letter-spacing: 0.02em;
-}
-.sr-ai-label-demo { color: #FBBF24; }
-.sr-ai-sub {
-  font-size: 0.67rem;
-  color: #475569;
-  margin-top: 3px;
-  padding-left: 14px;
-}
-
-.sr-sidebar-footer {
-  padding: 14px 20px;
-  border-top: 1px solid rgba(255,255,255,0.05);
-  margin-top: 8px;
-}
-.sr-sidebar-footer-txt {
-  font-size: 0.67rem;
-  color: #334155;
-  font-weight: 500;
-}
-
-/* ── Sidebar radio overrides ── */
-[data-testid="stSidebar"] .stRadio {
-  padding: 0 12px !important;
-}
-[data-testid="stSidebar"] .stRadio > label {
-  display: none !important;
-}
-[data-testid="stSidebar"] .stRadio > div {
-  gap: 2px !important;
-  flex-direction: column !important;
-}
-[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label {
-  display: flex !important;
-  align-items: center !important;
-  padding: 9px 12px !important;
-  border-radius: 9px !important;
-  color: #64748B !important;
-  font-size: 0.875rem !important;
-  font-weight: 500 !important;
-  cursor: pointer !important;
-  transition: all 0.15s !important;
-  border: 1px solid transparent !important;
-}
-[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label:hover {
-  background: rgba(255,255,255,0.04) !important;
-  color: #94A3B8 !important;
-}
-[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label:has(input:checked) {
-  background: rgba(56,189,248,0.1) !important;
-  color: #38BDF8 !important;
-  border-color: rgba(56,189,248,0.2) !important;
-  font-weight: 600 !important;
-}
 
 /* ══════════════════════════════════════════════════
    PAGE HEADER
 ══════════════════════════════════════════════════ */
 .sr-page-header {
+  margin-top: 0;
   margin-bottom: 24px;
+  padding-top: 4px;
   padding-bottom: 20px;
   border-bottom: 1px solid rgba(255,255,255,0.06);
+  overflow: visible !important;
 }
 .sr-page-title {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 1.65rem;
-  font-weight: 800;
-  color: #F1F5F9;
-  letter-spacing: -0.03em;
-  line-height: 1.2;
-  margin: 0 0 4px 0;
+  font-family: 'Space Grotesk', system-ui, sans-serif !important;
+  font-size: 1.85rem !important;
+  font-weight: 800 !important;
+  color: #F1F5F9 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.35 !important;
+  margin: 0 0 6px 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
 }
 .sr-page-sub {
-  color: #475569;
-  font-size: 0.875rem;
-  font-weight: 400;
-  margin: 0;
-  line-height: 1.5;
+  color: #94A3B8 !important;
+  font-size: 0.88rem !important;
+  font-weight: 400 !important;
+  margin: 0 !important;
+  line-height: 1.5 !important;
 }
 
 /* ══════════════════════════════════════════════════
@@ -866,6 +936,121 @@ def build_ai_prompt(sid, risk, disrs):
         f"and what they should do next."
     )
 
+# ── City coordinates for the map ─────────────────────────────────────────────
+_CITY_COORDS = {
+    "Shanghai":    (31.23,  121.47),
+    "Los Angeles": (34.05, -118.24),
+    "Hamburg":     (53.55,    9.99),
+    "Mumbai":      (19.08,   72.88),
+    "Detroit":     (42.33,  -83.05),
+    "Frankfurt":   (50.11,    8.68),
+    "Santos":      (-23.96, -46.33),
+    "Rotterdam":   (51.92,    4.48),
+    "Osaka":       (34.69,  135.50),
+    "Sydney":      (-33.87, 151.21),
+    "Dhaka":       (23.72,   90.41),
+    "New York":    (40.71,  -74.01),
+    "Lima":        (-12.05, -77.04),
+    "Tianjin":     (39.09,  117.20),
+}
+
+def _render_global_map(scored: list) -> None:
+    """Render the dark Plotly Scattergeo world map with shipment hotspot pins."""
+    shipments = load_shipments()
+    risk_map = {s["shipment_id"]: s for s in scored}
+
+    # Build node data (one per unique city that appears as origin or destination)
+    seen: dict[str, dict] = {}
+    for shp in shipments:
+        sid   = shp["id"]
+        score = risk_map.get(sid, {}).get("score", 0)
+        clsf  = risk_map.get(sid, {}).get("classification", "LOW")
+        color = RISK_COLORS.get(clsf, "#34D399")
+
+        for role in ("origin", "destination"):
+            city = shp[role]["city"]
+            coords = _CITY_COORDS.get(city)
+            if not coords:
+                continue
+            key = city
+            if key not in seen:
+                seen[key] = {
+                    "city": city, "lat": coords[0], "lon": coords[1],
+                    "max_score": score, "color": color, "shipments": [sid],
+                }
+            else:
+                if score > seen[key]["max_score"]:
+                    seen[key]["max_score"] = score
+                    seen[key]["color"]     = color
+                seen[key]["shipments"].append(sid)
+
+    nodes = list(seen.values())
+
+    # Route lines
+    line_lats, line_lons = [], []
+    for shp in shipments:
+        o_city = shp["origin"]["city"]
+        d_city = shp["destination"]["city"]
+        o_c = _CITY_COORDS.get(o_city)
+        d_c = _CITY_COORDS.get(d_city)
+        if o_c and d_c:
+            line_lats += [o_c[0], d_c[0], None]
+            line_lons += [o_c[1], d_c[1], None]
+
+    fig = go.Figure()
+
+    # Route lines
+    if line_lats:
+        fig.add_trace(go.Scattergeo(
+            lat=line_lats, lon=line_lons,
+            mode="lines",
+            line=dict(width=1.2, color="rgba(56,189,248,0.22)"),
+            hoverinfo="skip",
+            showlegend=False,
+        ))
+
+    # Hotspot pins — sized by risk score
+    if nodes:
+        pin_sizes  = [max(10, min(26, 8 + n["max_score"] // 8)) for n in nodes]
+        pin_colors = [n["color"] for n in nodes]
+        pin_text   = [
+            f"<b>{n['city']}</b><br>Score: {n['max_score']}<br>Shipments: {', '.join(n['shipments'])}"
+            for n in nodes
+        ]
+        fig.add_trace(go.Scattergeo(
+            lat=[n["lat"] for n in nodes],
+            lon=[n["lon"] for n in nodes],
+            mode="markers",
+            marker=dict(
+                size=pin_sizes,
+                color=pin_colors,
+                opacity=0.92,
+                line=dict(width=1.5, color="rgba(0,0,0,0.5)"),
+            ),
+            text=pin_text,
+            hovertemplate="%{text}<extra></extra>",
+            showlegend=False,
+        ))
+
+    fig.update_layout(
+        margin=dict(l=0, r=0, t=0, b=0),
+        height=420,
+        paper_bgcolor="#070B14",
+        plot_bgcolor="#070B14",
+        geo=dict(
+            projection_type="natural earth",
+            showland=True,    landcolor="#0D1424",
+            showocean=True,   oceancolor="#070B14",
+            showcountries=True, countrycolor="rgba(255,255,255,0.07)",
+            showcoastlines=True, coastlinecolor="rgba(255,255,255,0.1)",
+            showframe=True,   framecolor="rgba(255,255,255,0.1)",
+            bgcolor="#070B14",
+            lataxis=dict(range=[-60, 80]),
+        ),
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+
 # ════════════════════════════════════════════════════════════════════════════
 # PAGE: Dashboard
 # ════════════════════════════════════════════════════════════════════════════
@@ -927,6 +1112,18 @@ def page_dashboard():
             f'</div></div>',
             unsafe_allow_html=True,
         )
+
+    st.divider()
+
+    # ── Global Control Tower Map ──────────────────────────────────────────────
+    st.markdown(
+        '<div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;'
+        'letter-spacing:0.12em;color:#334155;margin-bottom:8px;">'
+        'GLOBAL CONTROL TOWER MAP — ACTIVE ROUTES &amp; HOTSPOTS</div>',
+        unsafe_allow_html=True,
+    )
+    scored = cached_scored_shipments()
+    _render_global_map(scored)
 
     st.divider()
 
@@ -1015,33 +1212,60 @@ def page_dashboard():
 # ════════════════════════════════════════════════════════════════════════════
 def page_shipments():
     _page_header(
-        "📋 Shipments",
-        "Risk-scored shipment register with disruption, route and AI analysis"
+        "Shipments Register",
+        "Risk-scored register — disruptions, routes & AI explanations"
     )
 
     scored = cached_scored_shipments()
 
-    # ── Sidebar filters ──────────────────────────────────────────────────────
-    st.sidebar.markdown('<div class="sr-nav-label">Filters</div>', unsafe_allow_html=True)
-    risk_levels     = ["All","CRITICAL","HIGH","MEDIUM","LOW"]
-    statuses        = ["All"] + sorted({s.get("status","") for s in scored if s.get("status")})
-    priorities      = ["All"] + sorted({s.get("priority","") for s in scored if s.get("priority")})
-    risk_filter     = st.sidebar.selectbox("Risk Level", risk_levels, key="filter_risk")
-    status_filter   = st.sidebar.selectbox("Status",     statuses,    key="filter_status")
-    priority_filter = st.sidebar.selectbox("Priority",   priorities,  key="filter_priority")
+    # ── Inline filter expander (matching screenshot) ──────────────────────────
+    with st.expander("🔍  Filter Shipments Register", expanded=False):
+        risk_levels     = ["All","CRITICAL","HIGH","MEDIUM","LOW"]
+        statuses        = ["All"] + sorted({s.get("status","") for s in scored if s.get("status")})
+        priorities      = ["All"] + sorted({s.get("priority","") for s in scored if s.get("priority")})
+        fc1, fc2, fc3 = st.columns(3)
+        with fc1:
+            risk_filter = st.selectbox("Risk Level", risk_levels, key="filter_risk")
+        with fc2:
+            status_filter = st.selectbox("Status", statuses, key="filter_status")
+        with fc3:
+            priority_filter = st.selectbox("Priority", priorities, key="filter_priority")
 
+    st.markdown('<div style="font-size:0.8rem;color:#475569;margin-bottom:4px;">Search shipment ID or description</div>', unsafe_allow_html=True)
     search = st.text_input(
-        "Search",
+        "Search shipment ID or description",
         key="_shp_search",
-        placeholder="🔍  Search by shipment ID or description…",
+        placeholder="e.g. SHP-001 or pharma…",
         label_visibility="collapsed",
     )
     filtered = filter_scored(scored, risk_filter, status_filter, priority_filter, search)
+
+    # ── Toolbar ──────────────────────────────────────────────────────────────
+    st.markdown(
+        f'<div style="font-size:0.75rem;color:#334155;text-transform:uppercase;'
+        f'letter-spacing:0.1em;margin-top:12px;margin-bottom:6px;font-weight:700;">'
+        f'ALL SHIPMENTS — {len(filtered)} SHOWN</div>',
+        unsafe_allow_html=True,
+    )
+    tb_left, tb_right = st.columns([1, 1])
+    with tb_left:
+        if st.button("🔄 Refresh Data", key="btn_refresh"):
+            st.cache_data.clear()
+            st.rerun()
+    with tb_right:
+        csv_data = pd.DataFrame([{
+            "ID": s["shipment_id"], "Description": s["description"],
+            "Score": s["score"], "Risk Level": s["classification"],
+            "Status": s.get("status",""), "Priority": s.get("priority",""),
+            "Delay (d)": s.get("delay_days",0), "Disruptions": len(s.get("disruptions",[])),
+        } for s in filtered]).to_csv(index=False).encode()
+        st.download_button("📥 Export CSV", csv_data, "shipments.csv", "text/csv", key="btn_export_csv")
 
     _section(f"Shipment Register — {len(filtered)} results")
     if not filtered:
         _empty("No shipments match the selected filters.", "🔍")
         return
+
 
     rows = []
     for s in filtered:
@@ -1623,59 +1847,117 @@ def page_cold_chain():
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# Sidebar
+# Top Navigation Bar
 # ════════════════════════════════════════════════════════════════════════════
-NAV_ICONS = {
-    "Dashboard":   "◈",
-    "Shipments":   "◻",
-    "Disruptions": "◬",
-    "Fleet":       "◉",
-    "Cold Chain":  "◎",
+NAV_TABS = [
+    ("Dashboard",   "🏠"),
+    ("Shipments",   "📦"),
+    ("Disruptions", "⚠️"),
+    ("Fleet",       "🚢"),
+    ("Cold Chain",  "🌡️"),
+]
+
+# Extra CSS injected once to style the nav buttons as tabs
+_TOPNAV_BTN_CSS = """
+<style>
+/* ── Top-nav Streamlit button overrides ── */
+[data-testid="stMainBlockContainer"] > div:first-child
+  [data-testid="stHorizontalBlock"] button {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 9px !important;
+  color: #64748B !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  padding: 7px 16px !important;
+  box-shadow: none !important;
+  transition: all 0.18s ease !important;
+  letter-spacing: 0 !important;
+  width: 100% !important;
 }
+[data-testid="stMainBlockContainer"] > div:first-child
+  [data-testid="stHorizontalBlock"] button:hover {
+  background: rgba(255,255,255,0.05) !important;
+  color: #CBD5E1 !important;
+  border-color: rgba(255,255,255,0.08) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+/* active tab — class added via key prefix "nav_active_" */
+[data-testid="stMainBlockContainer"] > div:first-child
+  [data-testid="stHorizontalBlock"] [data-testid="stBaseButton-secondary"]
+  button {
+  color: #38BDF8 !important;
+  background: rgba(56,189,248,0.12) !important;
+  border-color: rgba(56,189,248,0.3) !important;
+}
+/* hide the container padding around topnav buttons */
+[data-testid="stMainBlockContainer"] > div:first-child > div:first-child {
+  gap: 0 !important;
+  padding: 0 !important;
+}
+[data-testid="stMainBlockContainer"] > div:first-child
+  [data-testid="stColumn"] {
+  padding: 0 2px !important;
+}
+</style>
+"""
 
-def render_sidebar(pages, ai_on):
-    with st.sidebar:
-        # Logo area
-        pill_class = "sr-ai-status sr-ai-status-live" if ai_on else "sr-ai-status"
-        dot_class  = "sr-ai-dot" if ai_on else "sr-ai-dot sr-ai-dot-demo"
-        ai_lbl_class = "sr-ai-label" if ai_on else "sr-ai-label sr-ai-label-demo"
-        ai_text    = "watsonx.ai Connected" if ai_on else "Demo Mode · Mock AI"
-        ai_sub     = "IBM watsonx.ai  ·  Live" if ai_on else "Simulation data active"
 
-        st.markdown(
-            f'<div class="sr-sidebar-logo">'
-            f'<div class="sr-sidebar-logo-icon">⚓</div>'
-            f'<div class="sr-sidebar-brand">SmartRoute AI</div>'
-            f'<div class="sr-sidebar-tagline">Supply Chain Control Tower</div>'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
+def _render_topnav(ai_on: bool, current_page: str) -> str | None:
+    """Render the glassmorphic top nav bar. Returns new page if user clicked a tab."""
 
-        st.markdown('<div class="sr-nav-label">Navigation</div>', unsafe_allow_html=True)
-        page = st.radio(
-            "Navigate",
-            list(pages.keys()),
-            key="nav",
-            label_visibility="collapsed",
-        )
+    # ── Brand + status bar (pure HTML, no interaction) ─────────────────────
+    demo_pill = (
+        '<span class="sr-demo-pill">'
+        '<span class="sr-demo-pill-dot"></span>● Demo Mode</span>'
+        if not ai_on else
+        '<span class="sr-demo-pill" style="background:rgba(52,211,153,0.12);'
+        'border-color:rgba(52,211,153,0.3);color:#34D399;">'
+        '<span class="sr-demo-pill-dot" style="background:#34D399;box-shadow:0 0 6px #34D399;"></span>'
+        '● watsonx.ai Live</span>'
+    )
 
-        st.markdown(
-            f'<div class="{pill_class}">'
-            f'<div><span class="{dot_class}"></span>'
-            f'<span class="{ai_lbl_class}">{ai_text}</span></div>'
-            f'<div class="sr-ai-sub">{ai_sub}</div>'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
+    st.markdown(f"""
+<div class="sr-topnav">
+  <div class="sr-topnav-brand">
+    <div class="sr-topnav-logo">⚓</div>
+    <div class="sr-topnav-name">
+      <span class="sr-topnav-title">SmartRoute AI</span>
+      <span class="sr-topnav-sub">Supply Chain Control Tower</span>
+    </div>
+  </div>
+  <div class="sr-topnav-right" style="margin-left:auto;">
+    {demo_pill}
+    <span class="sr-team-badge">Team PI-NANT</span>
+  </div>
+</div>
+{_TOPNAV_BTN_CSS}
+""", unsafe_allow_html=True)
 
-        st.markdown(
-            f'<div class="sr-sidebar-footer">'
-            f'<div class="sr-sidebar-footer-txt">Team PI-NANT · IBM Hackathon · AI Track</div>'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
+    # ── Navigation buttons (real Streamlit widgets) ─────────────────────────
+    # Render as a horizontal row of buttons, one per page
+    btn_cols = st.columns(len(NAV_TABS))
+    for col, (name, icon) in zip(btn_cols, NAV_TABS):
+        is_active = (name == current_page)
+        # Style active tab differently via button_type
+        btn_type = "primary" if is_active else "secondary"
+        with col:
+            if st.button(
+                f"{icon}  {name}",
+                key=f"topnav_btn_{name}",
+                use_container_width=True,
+                type=btn_type,
+            ):
+                return name   # caller will handle st.rerun()
 
-    return page
+    # Draw bottom border under nav buttons
+    st.markdown(
+        '<div style="border-bottom:1px solid rgba(255,255,255,0.07);'
+        'margin: -8px -2.2rem 0 -2.2rem;"></div>',
+        unsafe_allow_html=True,
+    )
+    return None
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -1686,7 +1968,7 @@ def main():
         page_title="SmartRoute AI",
         page_icon="🚢",
         layout="wide",
-        initial_sidebar_state="expanded",
+        initial_sidebar_state="collapsed",
     )
     st.markdown(CSS, unsafe_allow_html=True)
 
@@ -1698,9 +1980,19 @@ def main():
         "Cold Chain":  page_cold_chain,
     }
 
+    # Initialise navigation state
+    if "nav" not in st.session_state:
+        st.session_state["nav"] = "Dashboard"
+
+    # Render top nav — if a button was clicked it returns the new page name
     ai_on = is_watsonx_configured()
-    page  = render_sidebar(pages, ai_on)
-    pages[page]()
+    clicked = _render_topnav(ai_on, st.session_state["nav"])
+    if clicked and clicked != st.session_state["nav"]:
+        st.session_state["nav"] = clicked
+        st.rerun()
+
+    # Render the active page
+    pages[st.session_state["nav"]]()
 
 
 main()
