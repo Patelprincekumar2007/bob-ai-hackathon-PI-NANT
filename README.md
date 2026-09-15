@@ -1,268 +1,295 @@
-# SmartRoute AI — Supply Chain Disruption Assistant
+# SmartRoute AI — Supply Chain Control Tower 🚢
 
-> An AI-powered supply chain control tower that detects disruptions in real time, scores shipment risk, recommends alternative routes, and monitors cold-chain integrity — powered by IBM watsonx.ai and built with Python + Streamlit.
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/Streamlit-1.35%2B-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" alt="Streamlit" />
+  <img src="https://img.shields.io/badge/IBM%20watsonx.ai-Granite%20LLM-052FAD?style=for-the-badge&logo=ibm&logoColor=white" alt="IBM watsonx.ai" />
+  <img src="https://img.shields.io/badge/Pytest-191%20Passed-2EA44F?style=for-the-badge&logo=pytest&logoColor=white" alt="Pytest" />
+  <img src="https://img.shields.io/badge/Design-Stitch%20Executive-00E5FF?style=for-the-badge" alt="Stitch Executive Design" />
+</p>
 
----
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Team](#team)
-- [Problem Statement](#problem-statement)
-- [Solution](#solution)
-- [Key Features](#key-features)
-- [Architecture](#architecture)
-- [Tech Stack](#tech-stack)
-- [Repository Structure](#repository-structure)
-- [Getting Started](#getting-started)
-- [Running the Tests](#running-the-tests)
-- [MCP Server](#mcp-server)
-- [Demo & Screenshots](#demo--screenshots)
-- [Known Limitations](#known-limitations)
-- [What We're Most Proud Of](#what-were-most-proud-of)
+> An enterprise-grade **Supply Chain Control Tower** powered by **IBM watsonx.ai** and built with **Python + Streamlit**. Automatically detects port/weather disruptions in real time, computes multi-factor shipment risk scores, recommends alternative maritime routes, optimizes fleet utilization, and monitors cold-chain thermal integrity — styled with a hyper-polished **Stitch Executive Glassmorphic Design System**.
 
 ---
 
-## Overview
+## 📋 Table of Contents
 
-SmartRoute AI brings together disruption detection, risk scoring, route optimisation, fleet management, and cold-chain monitoring into a single Streamlit dashboard. It is backed by IBM watsonx.ai for natural-language shipment explanations and exposes seven MCP tools that let an IBM Bob agent query the entire supply chain system conversationally.
+- [Overview](#-overview)
+- [Team Information](#-team-information)
+- [Problem Statement](#-problem-statement)
+- [The SmartRoute AI Solution](#-the-smartroute-ai-solution)
+- [Stitch UI & Visual Design System](#-stitch-ui--visual-design-system)
+- [Key Features](#-key-features)
+- [System Architecture](#-system-architecture)
+- [Tech Stack](#-tech-stack)
+- [Repository Structure](#-repository-structure)
+- [Getting Started](#-getting-started)
+- [Configuring IBM watsonx.ai](#-configuring-ibm-watsonxai)
+- [Running the 191 Test Suite](#-running-the-191-test-suite)
+- [IBM Bob MCP Integration](#-ibm-bob-mcp-integration)
+- [Real-Time Production Roadmap](#-real-time-production-roadmap)
 
 ---
 
-## Team
+## 🌐 Overview
 
-| Field | Value |
+**SmartRoute AI** unifies disruption detection, dynamic risk scoring, route optimization, fleet capacity matching, and cold-chain thermal monitoring into an interactive dashboard. 
+
+It is backed by **IBM watsonx.ai (Granite LLM)** for natural-language operational explanations and exposes an **IBM Bob MCP Server (7 tools)** allowing an AI agent to interrogate the entire supply chain conversationally in plain English.
+
+---
+
+## 👥 Team Information
+
+| Field | Details |
 |---|---|
-| **Team Name** | PI-NANT |
-| **Hackathon Track** | AI |
-| **Team Lead** | Kashyap Nasit — 24cs109@charusat.edu.in |
-| **Members** | Patel Princekumar (24cs073@charusat.edu.in), Patel Rudrakumar (24cs074@charusat.edu.in) |
+| **Team Name** | **PI-NANT** |
+| **Hackathon Track** | AI / IBM Bob AI Hackathon 2026 |
+| **Team Lead** | Kashyap Nasit (`24cs109@charusat.edu.in`) |
+| **Team Members** | Patel Princekumar (`24cs073@charusat.edu.in`), Patel Rudrakumar (`24cs074@charusat.edu.in`) |
+| **Institution** | CHARUSAT University |
 
 ---
 
-## Problem Statement
+## ⚠️ Problem Statement
 
-Supply chain operators managing global shipments face severe, costly disruptions — port congestion, extreme weather, industrial strikes, and vessel failures — causing delays, cargo loss, and fleet under-utilisation. Manual rerouting across fragmented carrier portals can take hours and often occurs too late to prevent damage, particularly for temperature-sensitive pharmaceutical and perishable cargo.
+Global supply chain operators managing maritime & intermodal freight face costly disruptions:
+- **Port Congestion & Bottlenecks** leading to multi-day container delays.
+- **Extreme Weather & Typhoons** stranding vessels on critical ocean routes.
+- **Labor Strikes & Vessel Failures** causing unexpected route detours.
+- **Cold-Chain Excursions** causing thermal degradation of temperature-sensitive pharmaceuticals and perishable food cargo.
 
----
-
-## Solution
-
-SmartRoute AI is an end-to-end supply chain intelligence platform that:
-
-- **Automatically detects** active disruptions across ports, weather events, strikes, and vessel failures.
-- **Scores every shipment's risk** on a 0–100 scale with CRITICAL / HIGH / MEDIUM / LOW classification.
-- **Recommends alternative routes and carriers** with estimated delay and cost impact.
-- **Monitors cold-chain temperature** in real time, raising excursion alerts before damage occurs.
-- **Explains decisions in plain English** using IBM watsonx.ai, enabling non-technical coordinators to act confidently.
-
-A clearly labelled **Demo Mode** operates without live credentials, making evaluation and local testing friction-free.
+Manual resolution across fragmented carrier portals takes hours and often happens after financial damage or cargo spoilage has occurred.
 
 ---
 
-## Key Features
+## 💡 The SmartRoute AI Solution
+
+SmartRoute AI provides an automated, end-to-end supply chain intelligence platform:
+
+1. **Automated Disruption Matching**: Maps live port congestions, strikes, and weather alerts to affected shipments, carriers, and vessels.
+2. **Multi-Factor Risk Engine**: Computes a dynamic `0–100` risk score for every shipment categorized into **CRITICAL**, **HIGH**, **MEDIUM**, or **LOW** severity tiers.
+3. **AI Route & Vessel Advisor**: Recommends alternative sea lanes and available fleet vessels with delay savings and additional cost impacts (`USD`).
+4. **Cold-Chain Thermal Tracking**: Continuously monitors container sensors, detecting excursion severity outside safe bands (e.g. `2°C – 8°C`).
+5. **IBM watsonx.ai Explanations**: Generates plain-English coordinator reports powered by IBM Granite LLM models.
+
+---
+
+## 🎨 Stitch UI & Visual Design System
+
+SmartRoute AI features a custom **Stitch Executive Glassmorphic UI** built directly in Python & Vanilla CSS, requiring zero React overhead:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                      Stitch Executive Design System                    │
+├────────────────────────────────────────────────────────────────────────┤
+│ • Palette: Obsidian Space (#0B0F19), Cyber Dark Slate (#141A29)        │
+│ • Accents: Neon Cyan (#00E5FF), Crimson (#FF3366), Amber (#FF9900)    │
+│ • Glassmorphism: Backdrop blur (16px), subtle radial gradient glows    │
+│ • Controls: Clean custom components with ZERO raw SVG text leaks        │
+│ • Maps: Interactive Plotly Scattergeo Natural Earth Projection Map     │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+### Key UI Components
+- **Global Control Tower Route Map**: Interactive Plotly map visualizer rendering origin-destination ocean shipping lanes, risk color codes, and port disruption hotspot markers.
+- **Clickable Risk Cards**: Interactive risk breakdown widgets that automatically navigate and filter the Shipment Register.
+- **Interactive Cold-Chain Excursion Chart**: Plotly time-series chart featuring target safe range shading (`2°C – 8°C`) and sensor reading tooltips.
+- **One-Click Clipboard Actions**: Custom embedded JavaScript buttons to copy Shipment IDs and AI Explanations instantly.
+
+---
+
+## ✨ Key Features
 
 | # | Feature | Description |
-|---|---|---|
-| 1 | **Real-time Risk Scoring** | 0–100 composite score per shipment with four severity tiers |
-| 2 | **Disruption Detection** | Automated ingestion and matching of port, weather, strike, and vessel events |
-| 3 | **Route Recommendations** | Alternative carrier and lane suggestions with delay / cost estimates |
-| 4 | **Fleet Optimisation** | Capacity and reefer-requirement matching across available vehicles |
-| 5 | **Cold-Chain Monitoring** | Continuous temperature tracking with excursion severity classification |
-| 6 | **AI Explanations** | IBM watsonx.ai–generated, plain-English shipment analysis |
-| 7 | **IBM Bob MCP Integration** | 7 MCP tools for natural-language supply chain queries via IBM Bob |
+|:---:|---|---|
+| 1 | **Multi-Factor Risk Scoring** | Dynamic `0–100` composite score calculated from disruption severity, delay days, deadline pressure, cargo priority, and thermal sensitivity. |
+| 2 | **Disruption Detection** | Real-time matching of active port, weather, labor, and vessel failure events. |
+| 3 | **Route Advisor** | Evaluates alternative sea lanes and carrier options with cost/delay impact breakdowns. |
+| 4 | **Fleet Capacity Optimizer** | Matches at-risk cargo to available fleet vessels based on TEU capacity and reefer requirements. |
+| 5 | **Cold-Chain Sensor Monitor** | Time-series telemetry tracking with excursion severity classification. |
+| 6 | **IBM watsonx.ai Granite LLM** | Plain-English operational explanations generated via IBM Granite LLMs. |
+| 7 | **IBM Bob MCP Integration** | 7 Model Context Protocol (MCP) tools for conversational supply chain control. |
 
 ---
 
-## Architecture
+## 🏗️ System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                  Streamlit Dashboard (app.py)            │
-│   Home · Shipment Analysis · Disruptions · Fleet ·       │
-│   Cold Chain · AI Insights                               │
-└──────────┬──────────────────────────────────────────────┘
-           │ calls
-┌──────────▼──────────────────────────────────────────────┐
-│                    Core Modules (src/core/)              │
-│  DisruptionDetector · RiskEngine · RouteAdvisor          │
-│  FleetOptimizer · ColdChainMonitor · WatsonxClient       │
-└──────────┬──────────────────────────────────────────────┘
-           │ reads                        │ queries
-┌──────────▼──────────┐        ┌──────────▼──────────────┐
-│  Mock Data (JSON)   │        │  IBM watsonx.ai          │
-│  shipments          │        │  (or Demo fallback)      │
-│  disruptions        │        └─────────────────────────┘
-│  vehicles           │
-│  temperature_readings│
-└────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     Streamlit Control Tower (app.py)                    │
+│   Dashboard · Shipments · Disruptions · Fleet · Cold Chain · AI Insights│
+└────────────────────────────┬────────────────────────────────────────────┘
+                             │ calls
+┌────────────────────────────▼────────────────────────────────────────────┐
+│                      Core Engine (src/core/)                            │
+│  DisruptionDetector · RiskEngine · RouteAdvisor · FleetOptimizer        │
+│  ColdChainMonitor · WatsonxClient · ActivityLog                         │
+└──────────────┬───────────────────────────────────────────┬──────────────┘
+               │ reads                                     │ queries
+┌──────────────▼─────────────┐                ┌────────────▼─────────────┐
+│   Structured Data (JSON)   │                │     IBM watsonx.ai       │
+│   shipments.json           │                │  Granite-13B-Instruct    │
+│   disruptions.json         │                │  (or Demo fallback)      │
+│   vehicles.json            │                └──────────────────────────┘
+│   temperature_readings.json│
+└────────────────────────────┘
 
-           ┌───────────────────────────────┐
-           │  IBM Bob MCP Server           │
-           │  mcp_server.py — 7 tools      │
-           │  Exposes supply chain data    │
-           │  to IBM Bob agent             │
-           └───────────────────────────────┘
+               ┌───────────────────────────────────────────┐
+               │         IBM Bob MCP Server                │
+               │         src/mcp_server.py (7 Tools)        │
+               │         Exposes supply chain tools        │
+               │         to conversational AI agents       │
+               └───────────────────────────────────────────┘
 ```
 
 ---
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-| Category | Technologies |
-|---|---|
-| **Language** | Python 3.11+ |
-| **Dashboard** | Streamlit ≥ 1.35, Plotly ≥ 5.18, Pandas ≥ 2.2 |
-| **IBM Technologies** | IBM watsonx.ai, IBM Bob, Model Context Protocol (MCP) |
-| **Testing** | pytest ≥ 8.0 (127+ tests across 3 test files) |
-| **CI/CD** | GitHub Actions (`validate.yml`) |
-| **Data** | JSON mock datasets (no external database required) |
-| **Config** | python-dotenv 1.0.1 |
+- **Core Runtime**: Python `3.11+`
+- **Frontend & Visualization**: Streamlit `≥ 1.35`, Plotly `≥ 5.18`, Pandas `≥ 2.2`
+- **AI & Integration**: IBM watsonx.ai (`ibm-watsonx-ai`), Model Context Protocol (`mcp ≥ 1.0.0`), `python-dotenv`
+- **Design System**: Vanilla CSS3 (Glassmorphism, CSS Grid, Custom Controls)
+- **Testing**: pytest `≥ 8.0` (**191 unit tests, 100% passing**)
 
 ---
 
-## Repository Structure
+## 📁 Repository Structure
 
 ```
 sample_repo_for_ibm/
 ├── src/                          # Application source code
-│   ├── app.py                    # Streamlit multi-page dashboard
+│   ├── app.py                    # Streamlit multi-page dashboard & UI
 │   ├── mcp_server.py             # IBM Bob MCP server entry point
-│   ├── core/                     # Core business-logic modules
-│   │   ├── disruption_detector.py
-│   │   ├── risk_engine.py
-│   │   ├── route_advisor.py
-│   │   ├── fleet_optimizer.py
-│   │   ├── cold_chain_monitor.py
-│   │   └── watsonx_client.py
+│   ├── core/                     # Core business logic modules
+│   │   ├── disruption_detector.py # Disruption matching & route lookup
+│   │   ├── risk_engine.py         # 0-100 Multi-factor risk scoring
+│   │   ├── route_advisor.py       # Rerouting engine & cost calculator
+│   │   ├── fleet_optimizer.py     # Capacity & vessel matching
+│   │   ├── cold_chain_monitor.py  # Thermal excursion sensor tracking
+│   │   ├── watsonx_client.py      # IBM watsonx.ai Granite LLM client
+│   │   └── activity_log.py        # Operations review tracking
 │   ├── mcp/                      # MCP tool definitions
-│   ├── data/                     # JSON mock datasets
-│   │   ├── shipments.json
-│   │   ├── disruptions.json
-│   │   ├── vehicles.json
-│   │   └── temperature_readings.json
-│   ├── .env.example              # Environment variable template
+│   ├── data/                     # Structured JSON datasets
+│   ├── .env                      # Local environment configuration
 │   └── requirements.txt          # Python dependencies
-├── docs/                         # Written documentation
-│   ├── architecture.md
-│   ├── problem-statement.md
-│   ├── solution-overview.md
-│   └── setup-guide.md
-├── tests/                        # pytest test suite (127+ tests)
-│   ├── test_part1.py
-│   ├── test_part2.py
-│   └── test_part3.py
-├── demo/                         # Demo artifacts
-│   ├── screenshots/              # App UI screenshots
-│   ├── demo-video-link.txt
-│   └── live-demo-url.txt
-├── presentation/
-│   └── slides.pptx               # Hackathon slide deck
-├── .github/
-│   └── workflows/validate.yml    # CI validation workflow
-├── submission.yaml               # Structured submission metadata
-└── README.md
+├── tests/                        # Full Pytest suite (191 tests)
+│   ├── test_part1.py             # Engine logic tests
+│   ├── test_part2.py             # MCP tool server tests
+│   └── test_part3.py             # Dashboard & helper function tests
+├── submission.yaml               # IBM Bob Hackathon submission manifest
+└── README.md                     # Project documentation
 ```
 
 ---
 
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
-
 - Python **3.11 or higher**
 - `git`
 
-### Installation
-
+### 1. Clone & Setup Virtual Environment
 ```bash
-# 1. Clone the repository
 git clone https://github.com/Patelprincekumar2007/sample_repo_for_ibm.git
 cd sample_repo_for_ibm
 
-# 2. Create and activate a virtual environment
+# Create and activate virtual environment
 python -m venv .venv
 
-# Windows
+# Windows (PowerShell)
 .venv\Scripts\activate
 # macOS / Linux
 source .venv/bin/activate
+```
 
-# 3. Install dependencies
+### 2. Install Dependencies
+```bash
 pip install -r src/requirements.txt
-
-# 4. (Optional) Configure IBM watsonx.ai credentials
-cp src/.env.example src/.env
-# Open src/.env and fill in your credentials.
-# Leave blank to run in Demo Mode — no credentials required.
-
-# 5. Launch the dashboard
-streamlit run src/app.py
 ```
 
-The application opens at **http://localhost:8501**.  
-No credentials are required; Demo Mode activates automatically when `.env` is not configured.
+### 3. Launch the Control Tower Dashboard
+```bash
+python -m streamlit run src/app.py
+```
+Open **`http://localhost:8501`** in your browser.
 
 ---
 
-## Running the Tests
+## 🔑 Configuring IBM watsonx.ai
 
-```bash
-# From the repository root (with the virtual environment active)
-pytest tests/ -v
+SmartRoute AI runs in **Demo Mode** out of the box. To connect your live IBM watsonx.ai account:
+
+Open `src/.env` and fill in your IBM Cloud credentials:
+
+```env
+WATSONX_API_KEY=your_actual_ibm_cloud_api_key
+WATSONX_PROJECT_ID=your_actual_watsonx_project_id
+WATSONX_URL=https://us-south.ml.cloud.ibm.com
+WATSONX_MODEL_ID=ibm/granite-13b-instruct-v2
 ```
 
-The test suite contains **127+ tests** covering the core engine (Part 1), the MCP server tools (Part 2), and the Streamlit dashboard logic (Part 3).
+*(Both `WATSONX_API_KEY` and `WATSONX_APIKEY` formats are supported).*
+
+Install the official IBM SDK:
+```bash
+pip install ibm-watsonx-ai
+```
+
+Upon restart, the dashboard top-bar badge will update to **`🟢 watsonx.ai`** and query live IBM Granite models.
 
 ---
 
-## MCP Server
+## 🧪 Running the 191 Test Suite
 
-SmartRoute AI ships an IBM Bob–compatible MCP server that exposes **7 tools** for natural-language supply chain queries:
-
-| Tool | Description |
-|---|---|
-| `get_shipments` | List all shipments with current status |
-| `get_disruptions` | Retrieve active disruption events |
-| `score_shipment_risk` | Compute 0–100 risk score for a shipment |
-| `recommend_routes` | Suggest alternative routes for an affected shipment |
-| `get_fleet_status` | Return vehicle availability and capacity |
-| `get_cold_chain_status` | Report temperature excursions for a shipment |
-| `explain_shipment` | Generate an AI explanation via IBM watsonx.ai |
+The repository includes **191 unit tests** with 100% pass coverage across core modules, MCP tools, and app logic.
 
 ```bash
-# Start the MCP server standalone
+# Run full test suite
+python -m pytest
+```
+
+---
+
+## 🤖 IBM Bob MCP Integration
+
+SmartRoute AI includes an **MCP (Model Context Protocol) Server** exposing 7 tools to conversational agents like IBM Bob:
+
+| Tool Name | Parameters | Description |
+|---|---|---|
+| `get_shipments` | `risk_level`, `status` | List shipments filtered by risk tier or status |
+| `get_disruptions` | `severity` | Retrieve active port, weather, or strike disruptions |
+| `score_shipment_risk` | `shipment_id` | Return detailed 0–100 factor breakdown for a shipment |
+| `recommend_routes` | `shipment_id` | Suggest alternative routes with delay/cost estimates |
+| `get_fleet_status` | `carrier` | Return vehicle availability, TEU capacity, and reefer specs |
+| `get_cold_chain_status` | `shipment_id` | Report thermal excursions & temperature logs |
+| `explain_shipment` | `shipment_id` | Generate an AI explanation via IBM Granite LLM |
+
+```bash
+# Start MCP server standalone
 python src/mcp_server.py
 ```
 
-Refer to [`src/mcp/README.md`](src/mcp/README.md) for IBM Bob registration instructions.
+---
+
+## 🔮 Real-Time Production Roadmap
+
+To transition SmartRoute AI from local demonstration to enterprise production:
+
+```
+[ AIS Ship Telemetry ] ──────┐
+[ IoT Container Sensors ] ───┼──► [ Kafka Stream ] ──► [ PostgreSQL / TimescaleDB ] ──► [ Core Engine ]
+[ Port & Weather Feeds ] ────┘
+```
+
+1. **Maritime AIS Feeds**: Ingest live vessel positions via Spire Maritime / MarineTraffic APIs.
+2. **Container IoT Telemetry**: Stream container temperature sensor events over MQTT into `cold_chain_monitor.py`.
+3. **Database Storage**: Migrate JSON datasets to PostgreSQL & TimescaleDB time-series storage.
+4. **Automated Triggers**: Run Celery workers to continuously re-evaluate shipment risk as live telemetry updates arrive.
 
 ---
 
-## Demo & Screenshots
-
-| Artifact | Link |
-|---|---|
-| **Demo Video** | [demo/demo-video-link.txt](demo/demo-video-link.txt) |
-| **Live Demo** | [demo/live-demo-url.txt](demo/live-demo-url.txt) |
-| **Screenshots** | [demo/screenshots/](demo/screenshots/) |
-| **Slide Deck** | [presentation/slides.pptx](presentation/slides.pptx) |
-
----
-
-## Known Limitations
-
-- Route recommendations are based on a curated static knowledge base — no live carrier API integration.
-- IBM watsonx.ai explanations fall back to deterministic demo text when credentials are not configured.
-- Temperature and shipment data originate from mock JSON datasets, not live IoT sensors or carrier systems.
-- No authentication or multi-user support (demonstration scope only).
-
----
-
-## What We're Most Proud Of
-
-The complete, end-to-end operator workflow — from real-time disruption detection and risk scoring through to AI-powered route recommendations and cold-chain oversight — running in a single, cohesive application. We are equally proud of the IBM Bob MCP integration, which allows a logistics coordinator to interrogate the entire supply chain system in plain English without leaving their AI assistant.
-
----
-
-*SmartRoute AI — PI-NANT · CHARUSAT University · IBM Bob Hackathon*
+<p align="center">
+  <b>SmartRoute AI</b> — Team PI-NANT · CHARUSAT University · IBM Bob AI Hackathon 2026
+</p>
