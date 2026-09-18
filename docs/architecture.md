@@ -10,6 +10,10 @@ graph TD
         BOB[IBM Bob CLI]
     end
 
+    subgraph Orchestration
+        DE[decision_engine<br/>src/core/decision_engine.py]
+    end
+
     subgraph Core Engine ["Logic Layer (src/core/)"]
         DD[disruption_detector]
         RE[risk_engine]
@@ -34,9 +38,12 @@ graph TD
     User([Logistics Coordinator]) --> UI
     BOB --> MCP
 
-    %% Interface to core
-    UI --> DD & RE & RA & FO & CC & WX
-    MCP --> DD & RE & RA & FO & CC & WX
+    %% Interface to orchestration
+    UI --> DE
+    MCP --> DE
+
+    %% Orchestration to core
+    DE --> DD & RE & RA & FO & CC & WX
 
     %% Core to data
     DD --> SJ & DJ
@@ -46,7 +53,7 @@ graph TD
     CC --> TJ
 
     %% watsonx path
-    RE & DD --> WX
+    DE --> WX
     WX -->|"WATSONX_API_KEY set"| WXAI
     WX -->|"no credentials"| MockAI([Mock AI Response])
 ```
@@ -57,6 +64,7 @@ graph TD
 |---|---|---|
 | Streamlit Dashboard | `src/app.py` | Five-page UI — Dashboard, Shipments, Disruptions, Fleet, Cold Chain |
 | IBM Bob MCP Server | `src/mcp_server.py` | 7 MCP tools for natural-language supply chain queries via IBM Bob |
+| **decision_engine** | `src/core/decision_engine.py` | **NEW** — Orchestrates all core modules; produces recommended_action, action_priority, escalation_required |
 | disruption_detector | `src/core/disruption_detector.py` | Matches active disruptions to shipments using 5 matching rules |
 | risk_engine | `src/core/risk_engine.py` | Scores shipments 0-100 with 5-factor model; classifies CRITICAL/HIGH/MEDIUM/LOW |
 | route_advisor | `src/core/route_advisor.py` | Returns pre-defined alternative routes that avoid active disruptions |

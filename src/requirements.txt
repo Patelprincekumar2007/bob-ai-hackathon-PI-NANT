@@ -2,21 +2,25 @@
 # Install: pip install -r requirements.txt
 # Python 3.11+ required
 
-# ── Part 1 ────────────────────────────────────────────────────────────────
-# Runtime: standard library only + dotenv
+# ── Core (always required) ─────────────────────────────────────────────────
 python-dotenv==1.0.1
 
 # Testing
 pytest>=8.0.0
 
-# IBM watsonx.ai SDK — uncomment when real credentials are available
+# ── IBM watsonx.ai SDK ────────────────────────────────────────────────────
+# Required for live IBM watsonx.ai (Granite LLM) AI explanations.
+# The app runs in Demo Mode (mock AI responses) without this package.
+# Uncomment and install when real WATSONX_API_KEY / WATSONX_PROJECT_ID are set.
 # ibm-watsonx-ai>=1.0.10
 
-# ── Part 2 ────────────────────────────────────────────────────────────────
-# IBM Bob MCP Server — uncomment to enable the MCP server
+# ── IBM Bob MCP Server ────────────────────────────────────────────────────
+# Required to run src/mcp_server.py so IBM Bob can call SmartRoute AI tools.
+# The core engine and Streamlit dashboard work without this package.
+# Uncomment when connecting to IBM Bob via MCP.
 # mcp>=1.0.0
 
-# ── Part 3 — Streamlit dashboard ──────────────────────────────────────────
+# ── Streamlit dashboard ───────────────────────────────────────────────────
 streamlit>=1.35.0
 pandas>=2.2.0
 plotly>=5.18.0

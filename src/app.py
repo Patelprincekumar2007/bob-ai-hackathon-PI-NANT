@@ -29,6 +29,8 @@ from core.cold_chain_monitor import (
     get_shipment_temperature_status, load_temperature_data,
 )
 from core.watsonx_client import generate_ai_explanation, is_watsonx_configured
+from core.decision_engine import analyse_shipment, build_watsonx_prompt, is_valid_analysis
+from core.report_exporter import generate_executive_report_html, generate_executive_report_markdown
 
 # ── Color contract ───────────────────────────────────────────────────────────
 RISK_COLORS = {"CRITICAL":"#F87171","HIGH":"#FB923C","MEDIUM":"#FBBF24","LOW":"#34D399"}
@@ -782,6 +784,165 @@ details[data-testid="stExpander"] > div {
 [data-testid="column"] { padding: 0 6px !important; }
 [data-testid="column"]:first-child { padding-left: 0 !important; }
 [data-testid="column"]:last-child  { padding-right: 0 !important; }
+
+/* ══════════════════════════════════════════════════
+   ACTION CARD
+══════════════════════════════════════════════════ */
+.sr-action-card {
+  background: var(--card);
+  border: 1px solid rgba(56,189,248,0.18);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 10px;
+  position: relative;
+  overflow: hidden;
+}
+.sr-action-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #38BDF8, #818CF8);
+}
+.sr-action-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #F1F5F9;
+  margin-bottom: 6px;
+}
+.sr-action-reason {
+  color: #94A3B8;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+.sr-action-factors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* ══════════════════════════════════════════════════
+   ESCALATION BANNER
+══════════════════════════════════════════════════ */
+.sr-escalation-banner {
+  background: rgba(248,113,113,0.1);
+  border: 1px solid rgba(248,113,113,0.3);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.sr-escalation-icon { font-size: 1.4rem; flex-shrink: 0; }
+.sr-escalation-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  color: #F87171;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+.sr-escalation-reasons {
+  color: #94A3B8;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+/* ══════════════════════════════════════════════════
+   DATA STATUS BADGE
+══════════════════════════════════════════════════ */
+.sr-data-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(251,191,36,0.08);
+  border: 1px solid rgba(251,191,36,0.2);
+  border-radius: 6px;
+  padding: 3px 9px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #FBBF24;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ══════════════════════════════════════════════════
+   RISK NARRATIVE
+══════════════════════════════════════════════════ */
+.sr-risk-narrative {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-top: 12px;
+  color: #94A3B8;
+  font-size: 0.855rem;
+  line-height: 1.7;
+  font-style: italic;
+}
+
+/* ══════════════════════════════════════════════════
+   VEHICLE DETAIL
+══════════════════════════════════════════════════ */
+.sr-vehicle-attr {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+.sr-vehicle-attr-item {
+  background: rgba(255,255,255,0.03);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+.sr-vehicle-attr-label {
+  font-size: 0.68rem;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+.sr-vehicle-attr-val {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #F1F5F9;
+}
+
+/* ══════════════════════════════════════════════════
+   MCP TOOL LIST
+══════════════════════════════════════════════════ */
+.sr-mcp-tool {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.sr-mcp-tool:last-child { border-bottom: none; }
+.sr-mcp-check {
+  color: #34D399;
+  font-size: 0.85rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.sr-mcp-name {
+  font-weight: 600;
+  color: #94A3B8;
+  font-size: 0.82rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+.sr-mcp-desc {
+  color: #475569;
+  font-size: 0.78rem;
+  margin-top: 2px;
+}
 </style>
 """
 
@@ -907,13 +1068,18 @@ def cached_cold_chain_summary():  return get_cold_chain_summary()
 def cached_temperature_alerts():  return get_temperature_alerts()
 
 def get_shipment_detail(sid):
-    risk   = calculate_risk_by_id(sid)
-    disrs  = get_shipment_disruptions(sid)
-    routes = recommend_alternative_routes(sid)
-    veh    = recommend_vehicle_for_shipment(sid)
-    raw    = next((s for s in load_shipments() if s["id"] == sid), None)
-    cold   = get_shipment_temperature_status(sid) if raw and raw.get("requires_cold_chain") else None
-    return dict(risk=risk, disruptions=disrs, routes=routes, vehicle=veh, cold=cold, raw=raw)
+    """Aggregate full shipment analysis using the decision engine."""
+    analysis = analyse_shipment(sid)
+    # Keep backward-compatible keys for existing Dashboard/other code paths
+    return dict(
+        risk=calculate_risk_by_id(sid),
+        disruptions=get_shipment_disruptions(sid),
+        routes=recommend_alternative_routes(sid),
+        vehicle=recommend_vehicle_for_shipment(sid),
+        cold=analysis.get("cold_chain"),
+        raw=analysis.get("shipment"),
+        analysis=analysis,   # full structured result
+    )
 
 def filter_scored(scored, rf, sf, pf, search=""):
     out = scored
@@ -925,7 +1091,11 @@ def filter_scored(scored, rf, sf, pf, search=""):
         out = [s for s in out if q in s["shipment_id"].lower() or q in s.get("description","").lower()]
     return out
 
-def build_ai_prompt(sid, risk, disrs):
+def build_ai_prompt(sid, risk, disrs, analysis=None):
+    """Build a rich AI prompt. Uses the decision engine analysis when available."""
+    if analysis and is_valid_analysis(analysis):
+        return build_watsonx_prompt(analysis)
+    # Fallback to the original simple prompt for backward compatibility
     rc  = (risk or {}).get("classification","UNKNOWN")
     rs  = (risk or {}).get("score",0)
     dt  = "; ".join(d["title"] for d in disrs) if disrs else "None"
@@ -1292,37 +1462,63 @@ def page_shipments():
     st.divider()
     _section("Shipment Detail")
     ids         = [s["shipment_id"] for s in filtered]
-    selected_id = st.selectbox("Select a shipment", ids, key="sel_shipment")
+
+    if "sel_shipment" in st.session_state and st.session_state["sel_shipment"] not in ids:
+        del st.session_state["sel_shipment"]
+
+    # Pre-select a high-risk shipment for demo convenience (SHP-006 or SHP-004)
+    _demo_default = next(
+        (s["shipment_id"] for s in filtered
+         if s["classification"] in ("CRITICAL", "HIGH")), ids[0] if ids else None
+    )
+    default_idx = ids.index(_demo_default) if _demo_default in ids else 0
+    selected_id = st.selectbox("Select a shipment", ids, index=default_idx, key="sel_shipment")
     if not selected_id:
         return
 
-    detail = get_shipment_detail(selected_id)
-    risk   = detail["risk"]
-    raw    = detail["raw"]
+    detail   = get_shipment_detail(selected_id)
+    risk     = detail["risk"]
+    raw      = detail["raw"]
+    analysis = detail.get("analysis", {})
 
     if risk is None:
         st.error(f"Could not load risk data for {selected_id}.")
         return
 
-    col1, col2 = st.columns(2, gap="large")
+    # ── 1. SHIPMENT HEADER ────────────────────────────────────────────────────
+    _section("Shipment Overview")
+    orig = (raw or {}).get("origin",{})
+    dest = (raw or {}).get("destination",{})
+    orig_str = f"{orig.get('city','')} → {dest.get('city','')}"
+    desc     = (raw or {}).get("description","")
+    carrier  = (raw or {}).get("carrier","")
+    cargo    = (raw or {}).get("cargo_type","")
+    priority = (raw or {}).get("priority","")
+    status   = (raw or {}).get("status","")
+    delay    = int((raw or {}).get("delay_days",0))
+    cold_req = bool((raw or {}).get("requires_cold_chain",False))
 
-    with col1:
-        _section("Shipment Info")
-        orig = (raw or {}).get("origin",{})
-        dest = (raw or {}).get("destination",{})
-        info = "".join([
+    col_hdr1, col_hdr2 = st.columns([2, 1], gap="large")
+    with col_hdr1:
+        info_html = "".join([
             _row("Shipment ID:",  f'<span class="sr-mono">{selected_id}</span>'),
-            _row("Description:",  (raw or {}).get("description","N/A")),
-            _row("Carrier:",      (raw or {}).get("carrier","N/A")),
-            _row("Origin:",       f"{orig.get('city','')} · {orig.get('country','')}"),
-            _row("Destination:",  f"{dest.get('city','')} · {dest.get('country','')}"),
-            _row("Status:",       (raw or {}).get("status","N/A")),
-            _row("Priority:",     (raw or {}).get("priority","N/A")),
-            _row("Cargo Type:",   (raw or {}).get("cargo_type","N/A")),
+            _row("Description:",  desc or "N/A"),
+            _row("Route:",        orig_str + f" ({orig.get('country','')}/{dest.get('country','')})"),
+            _row("Carrier:",      carrier or "N/A"),
+            _row("Status:",       status.replace("_"," ").title() if status else "N/A"),
+            _row("Priority:",     priority.upper() if priority else "N/A"),
+            _row("Cargo Type:",   cargo or "N/A"),
+            _row("Cold Chain:",   "❄️ Required" if cold_req else "Not required"),
+            _row("Delay:",        f"{delay} day(s)" if delay else "On schedule"),
         ])
-        st.markdown(f'<div class="sr-card">{info}</div>', unsafe_allow_html=True)
-
-    with col2:
+        st.markdown(
+            f'<div class="sr-card">{info_html}'
+            f'<div style="margin-top:8px;"><span class="sr-data-status">📁 DEMO DATA — Local JSON</span></div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+    with col_hdr2:
+        # ── 2. RISK SCORE ────────────────────────────────────────────────────
         _section("Risk Assessment")
         fb  = risk.get("factor_breakdown",{})
         sc  = risk["score"]
@@ -1330,27 +1526,56 @@ def page_shipments():
         clr = RISK_COLORS.get(cls,"#718096")
         bars = "".join([
             _factor_bar("Disruption Severity", fb.get("disruption_severity",0), 35),
-            _factor_bar("Delay Factor",         fb.get("delay",0),              25),
+            _factor_bar("Delay Impact",         fb.get("delay",0),              25),
             _factor_bar("Deadline Pressure",    fb.get("deadline_pressure",0),  20),
-            _factor_bar("Priority Factor",      fb.get("priority",0),           15),
-            _factor_bar("Cold-Chain Factor",    fb.get("cold_chain",0),          5),
+            _factor_bar("Priority",             fb.get("priority",0),           15),
+            _factor_bar("Cold Chain",           fb.get("cold_chain",0),          5),
         ])
         st.markdown(
             f'<div class="sr-card">'
-            f'<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">'
+            f'<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">'
             f'<div style="text-align:center;">'
-            f'<div style="font-size:2.4rem;font-weight:800;color:{clr};'
+            f'<div style="font-size:2.6rem;font-weight:800;color:{clr};'
             f'font-family:Space Grotesk,sans-serif;letter-spacing:-0.04em;line-height:1;">{sc}</div>'
-            f'<div style="font-size:0.68rem;color:#475569;font-weight:600;text-transform:uppercase;'
+            f'<div style="font-size:0.65rem;color:#475569;font-weight:600;text-transform:uppercase;'
             f'letter-spacing:0.06em;">/ 100</div></div>'
             f'<div>{_badge(cls, clr)}'
-            f'<div style="font-size:0.78rem;color:#475569;margin-top:5px;">Risk Score</div>'
+            f'<div style="font-size:0.75rem;color:#475569;margin-top:4px;">Risk Score</div>'
             f'</div></div>'
-            f'{bars}</div>',
+            f'{bars}'
+            f'{_score_bar(sc)}'
+            f'</div>',
             unsafe_allow_html=True,
         )
 
-    # Active disruptions
+    # ── "Why is this shipment at risk?" ──────────────────────────────────────
+    if analysis.get("risk_explanation"):
+        # Extract just the contributing factor lines — skip the header line
+        full_expl = analysis["risk_explanation"]
+        # Build a readable summary of the top driving factors
+        dominant_factors = [
+            f for f, v in [
+                ("Disruption severity", fb.get("disruption_severity",0)),
+                ("Current delay",       fb.get("delay",0)),
+                ("Deadline pressure",   fb.get("deadline_pressure",0)),
+                ("Cargo priority",      fb.get("priority",0)),
+                ("Cold-chain status",   fb.get("cold_chain",0)),
+            ] if v > 0
+        ]
+        sf = analysis.get("supporting_factors",[])
+        narrative = " · ".join(sf) if sf else "Refer to factor breakdown above."
+        _section("Why Is This Shipment At Risk?")
+        st.markdown(
+            f'<div class="sr-risk-narrative">'
+            f'<strong style="color:#F1F5F9;font-style:normal;">'
+            f'Top contributing factors:</strong> '
+            + (" | ".join(dominant_factors) if dominant_factors else "None identified") +
+            f'<br><br>{narrative}'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+    # ── 3. ACTIVE DISRUPTIONS ────────────────────────────────────────────────
     _section("Active Disruptions")
     disrs = detail["disruptions"]
     if not disrs:
@@ -1359,7 +1584,7 @@ def page_shipments():
         for d in disrs:
             sc2 = SEV_COLORS.get(d["severity"].upper(),"#718096")
             st.markdown(
-                f'<div class="sr-disruption-card" style="border-left:3px solid {sc2};border-radius:0 {14}px {14}px 0;">'
+                f'<div class="sr-disruption-card" style="border-left:3px solid {sc2};border-radius:0 14px 14px 0;">'
                 f'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
                 f'{_badge(d["severity"].upper(), sc2)}'
                 f'<strong style="color:#F1F5F9;">{d["title"]}</strong>'
@@ -1367,47 +1592,144 @@ def page_shipments():
                 f'{d["type"]} · +{d["estimated_delay_days"]}d · +${d["additional_cost_usd"]:,}</span>'
                 f'</div>'
                 f'<div style="color:#64748B;font-size:.86rem;line-height:1.55;">{d["description"]}</div>'
+                f'<div style="color:#475569;font-size:.78rem;margin-top:6px;">'
+                f'<em>Match reason: {d.get("match_reason","—")}</em></div>'
                 f'</div>',
                 unsafe_allow_html=True,
             )
 
-    # Route alternatives
+    # ── 4. RECOMMENDED ACTION + ESCALATION ──────────────────────────────────
+    _section("Recommended Action")
+    rec_action   = analysis.get("recommended_action", "Continue Monitoring")
+    action_pri   = analysis.get("action_priority", "MEDIUM")
+    action_reason = analysis.get("action_reason", "")
+    esc_required = analysis.get("escalation_required", False)
+    esc_reasons  = analysis.get("escalation_reasons", [])
+    supp_factors = analysis.get("supporting_factors", [])
+
+    # Priority color
+    _PRI_CLR = {"IMMEDIATE":"#F87171","HIGH":"#FB923C","MEDIUM":"#FBBF24","LOW":"#34D399"}
+    pri_clr  = _PRI_CLR.get(action_pri, "#38BDF8")
+
+    # Escalation banner (shown first when required)
+    if esc_required:
+        reasons_html = "<br>".join(f"⚠ {r}" for r in esc_reasons) if esc_reasons else ""
+        st.markdown(
+            f'<div class="sr-escalation-banner">'
+            f'<span class="sr-escalation-icon">🚨</span>'
+            f'<div>'
+            f'<div class="sr-escalation-title">Escalation Required — Immediate Attention</div>'
+            f'<div class="sr-escalation-reasons">{reasons_html}</div>'
+            f'</div></div>',
+            unsafe_allow_html=True,
+        )
+
+    factors_chips = "".join(
+        f'<span class="sr-chip">{f}</span>' for f in supp_factors
+    )
+    st.markdown(
+        f'<div class="sr-action-card">'
+        f'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
+        f'<div class="sr-action-title">🎯 {rec_action}</div>'
+        f'<span style="background:{pri_clr};color:#070B14;font-size:.72rem;font-weight:700;'
+        f'padding:3px 10px;border-radius:6px;text-transform:uppercase;letter-spacing:.04em;">'
+        f'{action_pri}</span>'
+        f'</div>'
+        f'<div class="sr-action-reason">{action_reason}</div>'
+        f'<div class="sr-action-factors">{factors_chips}</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    # ── 5. ROUTE ALTERNATIVES ────────────────────────────────────────────────
     _section("Route Alternatives")
     routes = detail["routes"]
     alts   = routes.get("alternatives",[])
     if not alts:
         if routes.get("action_required"):
-            _empty("No pre-defined alternatives — contact carrier directly.", "📞")
+            _empty("No pre-defined alternatives for this route — contact carrier directly.", "📞")
         else:
             _empty("No rerouting required — shipment is on schedule.", "✅")
     else:
+        # Show current route header
+        current_route = f"{orig.get('city','?')} → {dest.get('city','?')} via {carrier}"
+        st.markdown(
+            f'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);'
+            f'border-radius:10px;padding:12px 16px;margin-bottom:12px;">'
+            f'<div style="font-size:.68rem;font-weight:700;color:#475569;text-transform:uppercase;'
+            f'letter-spacing:.09em;margin-bottom:4px;">CURRENT ROUTE</div>'
+            f'<div style="color:#94A3B8;font-size:.9rem;font-weight:500;">{current_route}</div>'
+            f'<div style="color:#F87171;font-size:.78rem;margin-top:3px;">'
+            f'⚠ {len(disrs)} active disruption(s) on this route</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
         for i, alt in enumerate(alts, 1):
             ed    = alt["extra_delay_days"]
-            d_str = f"+{ed}d" if ed >= 0 else f"{abs(ed)}d faster"
+            d_str = f"+{ed} day(s)" if ed >= 0 else f"{abs(ed)} day(s) faster"
             d_clr = RISK_COLORS["HIGH"] if ed > 0 else RISK_COLORS["LOW"]
             cost_str = "+${:,}".format(alt["extra_cost_usd"])
-            with st.expander(f"Option {i}: {alt['description']}  ·  {d_str}  ·  {cost_str}"):
+            avoids = ", ".join(alt.get("avoids_disruptions",[]))
+            with st.expander(
+                f"Alternative {i}: {alt['description']}  ·  {d_str}  ·  {cost_str}",
+                expanded=(i == 1)
+            ):
+                c_a, c_b = st.columns(2)
+                with c_a:
+                    st.markdown(
+                        _row("Delay Impact:",   f'<span style="color:{d_clr};font-weight:700;">{d_str}</span>') +
+                        _row("Cost Impact:",     f'<span style="color:#FBBF24;font-weight:700;">{cost_str}</span>') +
+                        _row("Avoids:",          avoids or "—") +
+                        _row("Via Port/Hub:",    alt.get("via","—")),
+                        unsafe_allow_html=True,
+                    )
+                with c_b:
+                    veh_list = alt.get("available_vehicles",[])
+                    if veh_list:
+                        v_html = " ".join(f'<span class="sr-chip">🚢 {v["name"]}</span>' for v in veh_list)
+                        st.markdown(f'<div style="margin-bottom:6px;"><span style="color:#475569;font-size:.78rem;">Available vessels:</span><br>{v_html}</div>', unsafe_allow_html=True)
+                    else:
+                        carriers = _chips(alt.get("suggested_carriers",[]))
+                        st.markdown(f'<div style="margin-bottom:6px;"><span style="color:#475569;font-size:.78rem;">Suggested carriers:</span><br>{carriers}</div>', unsafe_allow_html=True)
                 st.markdown(
-                    f'{_badge(d_str, d_clr)}&nbsp;{_badge(cost_str,"#1E3A5F")}'
-                    f'<div style="color:#64748B;margin-top:10px;line-height:1.6;font-size:.875rem;">'
-                    f'{alt["reason"]}</div>',
+                    f'<div style="background:rgba(255,255,255,0.02);border-radius:8px;padding:10px 12px;'
+                    f'color:#64748B;font-size:.85rem;line-height:1.6;margin-top:6px;">'
+                    f'<strong style="color:#94A3B8;">Rationale:</strong> {alt["reason"]}</div>',
                     unsafe_allow_html=True,
                 )
-                veh_list = alt.get("available_vehicles",[])
-                if veh_list:
-                    v_html = " ".join(f'<span class="sr-chip">🚢 {v["name"]}</span>' for v in veh_list)
-                    st.markdown(f'<div style="margin-top:8px;">Vessels: {v_html}</div>', unsafe_allow_html=True)
-                else:
-                    carriers = _chips(alt.get("suggested_carriers",[]))
-                    st.markdown(f'<div style="margin-top:8px;color:#64748B;font-size:.85rem;">Carriers: {carriers}</div>', unsafe_allow_html=True)
-                if alt.get("via"):
-                    st.markdown(f'<div style="color:#475569;font-size:.82rem;margin-top:4px;">Via: <strong style="color:#94A3B8">{alt["via"]}</strong></div>', unsafe_allow_html=True)
 
-    # Vehicle recommendation
+    # ── 6. VEHICLE RECOMMENDATION ────────────────────────────────────────────
     _section("Vehicle Recommendation")
     vr   = detail["vehicle"]
     best = vr.get("recommended_vehicle")
     if best:
+        needs_reefer = bool((raw or {}).get("requires_cold_chain",False))
+        reefer_ok    = (best.get("available_reefer_slots",0) > 0) if needs_reefer else None
+        reefer_txt   = ""
+        if needs_reefer:
+            reefer_txt = (
+                '<div style="display:flex;align-items:center;gap:8px;margin-top:10px;">'
+                + ('<span style="color:#34D399;font-weight:700;">❄️ Reefer: Required ✓ Available</span>'
+                   if reefer_ok else
+                   '<span style="color:#F87171;font-weight:700;">❄️ Reefer: Required — check availability</span>')
+                + '</div>'
+            )
+        attrs = (
+            f'<div class="sr-vehicle-attr">'
+            f'<div class="sr-vehicle-attr-item"><div class="sr-vehicle-attr-label">Vehicle</div>'
+            f'<div class="sr-vehicle-attr-val">{best.get("name","—")}</div></div>'
+            f'<div class="sr-vehicle-attr-item"><div class="sr-vehicle-attr-label">Carrier</div>'
+            f'<div class="sr-vehicle-attr-val">{best.get("carrier","—")}</div></div>'
+            f'<div class="sr-vehicle-attr-item"><div class="sr-vehicle-attr-label">Available TEU</div>'
+            f'<div class="sr-vehicle-attr-val">{best.get("available_teu","—")}</div></div>'
+            f'<div class="sr-vehicle-attr-item"><div class="sr-vehicle-attr-label">Reefer Slots</div>'
+            f'<div class="sr-vehicle-attr-val">{best.get("available_reefer_slots",0)}</div></div>'
+            f'<div class="sr-vehicle-attr-item"><div class="sr-vehicle-attr-label">Location</div>'
+            f'<div class="sr-vehicle-attr-val">{best.get("current_location","—")}</div></div>'
+            f'<div class="sr-vehicle-attr-item"><div class="sr-vehicle-attr-label">Next Departure</div>'
+            f'<div class="sr-vehicle-attr-val">{best.get("next_departure","TBD")}</div></div>'
+            f'</div>'
+        )
         alts_v   = vr.get("alternatives",[])
         alt_html = ""
         for a in alts_v:
@@ -1421,60 +1743,98 @@ def page_shipments():
             )
         st.markdown(
             f'<div class="sr-card" style="border-left:3px solid #38BDF8;border-radius:0 14px 14px 0;">'
-            f'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
-            f'<span style="color:#38BDF8;font-size:.7rem;font-weight:700;text-transform:uppercase;'
-            f'letter-spacing:.08em;">✔ Recommended</span></div>'
-            f'<div style="color:#F1F5F9;font-size:.9rem;line-height:1.6;">{vr["reason"]}</div>'
+            f'<div style="color:#38BDF8;font-size:.7rem;font-weight:700;text-transform:uppercase;'
+            f'letter-spacing:.08em;margin-bottom:8px;">✔ Recommended Vehicle</div>'
+            f'{attrs}{reefer_txt}'
+            f'<div style="color:#94A3B8;font-size:.82rem;margin-top:10px;line-height:1.6;">'
+            f'{vr.get("reason","")}'
+            f'</div>'
             f'{alt_html}</div>',
             unsafe_allow_html=True,
         )
     else:
-        _empty(vr.get("reason","No vehicle recommendation available."), "🔍")
+        _empty(vr.get("reason","No suitable vehicle found for this shipment."), "🔍")
 
-    # Cold chain
+    # ── 7. COLD-CHAIN STATUS ─────────────────────────────────────────────────
     cold = detail["cold"]
     if cold:
         _section("Cold-Chain Status")
-        sc3 = SEV_COLORS.get(cold["excursion_severity"],"#718096")
+        sc3     = SEV_COLORS.get(cold["excursion_severity"],"#718096")
+        t_min   = cold.get("required_temp_min_c","?")
+        t_max   = cold.get("required_temp_max_c","?")
+        latest  = cold.get("latest_temp_c","?")
+        exc_cnt = cold.get("excursion_count",0)
+        exc_sev = cold.get("excursion_severity","NORMAL")
+        max_dev = cold.get("max_deviation_c", None)  # may not always exist
+        cc_risk = cold.get("cold_chain_risk_score",0)
+        cc_detail = "".join([
+            _row("Safe Range:",     f'{t_min} °C – {t_max} °C'),
+            _row("Latest Reading:", f'{latest} °C'),
+            _row("Min Observed:",   f'{cold.get("min_observed_c","?")!s} °C'),
+            _row("Max Observed:",   f'{cold.get("max_observed_c","?")!s} °C'),
+            _row("Readings:",       str(cold.get("reading_count",0))),
+            _row("Excursions:",     str(exc_cnt)),
+            _row("Severity:",       f'<span style="color:{sc3};font-weight:700;">{exc_sev}</span>'),
+            _row("Cold-Chain Risk:",f'<span style="color:#38BDF8;font-weight:700;">{cc_risk}/100</span>'),
+        ])
         st.markdown(
             f'<div class="sr-card" style="border-left:3px solid {sc3};border-radius:0 14px 14px 0;">'
-            f'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
-            f'{_badge(cold["excursion_severity"], sc3)}'
+            f'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
+            f'{_badge(exc_sev, sc3)}'
+            f'<span style="color:#94A3B8;font-size:.82rem;">Cold-Chain Monitor — DEMO DATA</span>'
             f'</div>'
-            f'<div style="color:#94A3B8;font-size:.88rem;line-height:1.6;">{cold["explanation"]}</div>'
-            f'</div>',
+            f'{cc_detail}'
+            f'<div style="margin-top:12px;background:rgba(255,255,255,0.02);border-radius:8px;'
+            f'padding:10px 14px;color:#64748B;font-size:.83rem;line-height:1.6;">'
+            f'<strong style="color:#94A3B8;">Why does this matter?</strong><br>'
+            + (
+                f'Temperature excursions (readings outside {t_min}–{t_max} °C) indicate '
+                f'that cargo integrity may be compromised. '
+                f'{exc_cnt} excursion(s) detected. '
+                + ("Severity is CRITICAL — immediate corrective action required to prevent spoilage or regulatory non-compliance."
+                   if exc_sev == "CRITICAL" else
+                   "Severity is WARNING — close monitoring required to prevent escalation."
+                   if exc_sev == "WARNING" else
+                   "All readings are within the safe range.")
+            ) +
+            f'</div></div>',
             unsafe_allow_html=True,
         )
 
-    # AI explanation
+    # ── 8. AI EXPLANATION ────────────────────────────────────────────────────
     st.divider()
     ai_configured = is_watsonx_configured()
     pill = (
-        '<span class="sr-pill-wx">● watsonx.ai</span>'
+        '<span class="sr-pill-wx">● watsonx.ai Live</span>'
         if ai_configured else
-        '<span class="sr-pill-demo">○ Demo Mode</span>'
+        '<span class="sr-pill-demo">○ Demo Mode — Mock AI</span>'
     )
     st.markdown(
         f'<div class="sr-ai-section">'
         f'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">'
         f'<span style="font-weight:700;color:#F1F5F9;font-size:.98rem;font-family:Space Grotesk,sans-serif;">'
-        f'AI Risk Explanation</span>'
-        f'{pill}</div>',
+        f'🤖 AI Risk Explanation — IBM watsonx.ai</span>'
+        f'{pill}</div>'
+        f'<div style="color:#475569;font-size:.8rem;margin-bottom:8px;">'
+        f'The deterministic SmartRoute engine has already calculated the risk, action, and route options. '
+        f'IBM watsonx.ai (Granite LLM) explains the result in plain English.</div>',
         unsafe_allow_html=True,
     )
-    ai_label = "watsonx.ai" if ai_configured else "Demo AI"
+    ai_label = "watsonx.ai (Granite LLM)" if ai_configured else "Demo AI (Mock)"
     if st.button(f"Generate Explanation via {ai_label}", key=f"ai_{selected_id}"):
-        prompt = build_ai_prompt(selected_id, risk, disrs)
-        with st.spinner("Analysing with AI…"):
+        prompt = build_ai_prompt(selected_id, risk, disrs, analysis)
+        with st.spinner("Generating AI explanation…"):
             result = generate_ai_explanation(prompt)
         src_pill = (
             '<span class="sr-pill-wx">● watsonx.ai</span>'
             if result["source"] == "watsonx" else
-            '<span class="sr-pill-demo">○ Demo Mode</span>'
+            '<span class="sr-pill-demo">○ Demo Mode — Mock AI</span>'
         )
         st.markdown(
             f'<div class="sr-ai-response">'
-            f'<div style="margin-bottom:10px;">{src_pill}</div>'
+            f'<div style="margin-bottom:10px;">{src_pill}'
+            + (f'<span style="color:#475569;font-size:.75rem;margin-left:8px;">Model: {result.get("model_id","mock")}</span>' if result.get("model_id") else '') +
+            f'</div>'
             f'<div class="sr-ai-response-text">{result["text"]}</div>'
             f'</div>',
             unsafe_allow_html=True,
@@ -1482,6 +1842,95 @@ def page_shipments():
         if result.get("error"):
             st.caption(f"Note: {result['error']}")
     st.markdown('</div>', unsafe_allow_html=True)
+
+    # ── Executive Report Exporter ───────────────────────────────────────────
+    _section("Executive Incident Command Report")
+    st.markdown(
+        f'<div class="sr-card">'
+        f'<div style="color:#94A3B8;font-size:0.86rem;margin-bottom:12px;line-height:1.5;">'
+        f'Generate an official <strong>Executive Incident Briefing & Mitigation Plan</strong> for logistics leadership, '
+        f'clients, or compliance auditors. Includes risk factors, recommended actions, route options, and IBM watsonx.ai narrative.'
+        f'</div></div>',
+        unsafe_allow_html=True,
+    )
+    col_exp1, col_exp2 = st.columns(2)
+    with col_exp1:
+        st.download_button(
+            "📥 Download Executive Briefing (HTML)",
+            data=generate_executive_report_html(selected_id),
+            file_name=f"Executive_Incident_Briefing_{selected_id}.html",
+            mime="text/html",
+            key=f"dl_html_{selected_id}",
+            use_container_width=True,
+        )
+    with col_exp2:
+        st.download_button(
+            "📄 Download Briefing (Markdown)",
+            data=generate_executive_report_markdown(selected_id),
+            file_name=f"Executive_Incident_Briefing_{selected_id}.md",
+            mime="text/markdown",
+            key=f"dl_md_{selected_id}",
+            use_container_width=True,
+        )
+
+    # ── 9. TECHNICAL DETAILS + MCP TOOLS ─────────────────────────────────────
+    st.divider()
+    with st.expander("🔧 Technical Details & MCP Tool Integration"):
+        c_left, c_right = st.columns(2, gap="large")
+        with c_left:
+            _section("Factor Breakdown")
+            fb = risk.get("factor_breakdown",{})
+            st.markdown(
+                f'<div class="sr-card">'
+                + _row("Disruption Severity:", f'{fb.get("disruption_severity",0)}/35') +
+                _row("Delay Impact:",           f'{fb.get("delay",0)}/25') +
+                _row("Deadline Pressure:",      f'{fb.get("deadline_pressure",0)}/20') +
+                _row("Priority:",               f'{fb.get("priority",0)}/15') +
+                _row("Cold-Chain:",             f'{fb.get("cold_chain",0)}/5') +
+                _row("Total Score:",            f'<strong style="color:{RISK_COLORS.get(cls,"#718096")};">{sc}/100 ({cls})</strong>') +
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+            _section("Data Sources")
+            ds = analysis.get("data_sources", {})
+            ds_html = "".join([
+                _row("Shipment Data:",    "✓ Loaded" if ds.get("shipment_data") == "loaded" else "Not found"),
+                _row("Disruption Data:", "✓ Loaded" if ds.get("disruption_data") == "loaded" else "Unavailable"),
+                _row("Route Data:",      "✓ Loaded" if ds.get("route_data") == "loaded" else "Unavailable"),
+                _row("Vehicle Data:",    "✓ Loaded" if ds.get("vehicle_data") == "loaded" else "Unavailable"),
+                _row("Temperature:",     "✓ Loaded" if ds.get("temperature_data") == "loaded" else ("N/A" if ds.get("temperature_data") == "not_applicable" else "Not found")),
+                _row("Environment:",     f'<span class="sr-data-status">{ds.get("source","DEMO")}</span>'),
+            ])
+            st.markdown(f'<div class="sr-card">{ds_html}</div>', unsafe_allow_html=True)
+
+        with c_right:
+            _section("MCP Tool Integration")
+            _MCP_TOOLS = [
+                ("get_shipment_risk",        "Returns risk score, classification, and factor breakdown for a shipment."),
+                ("get_shipment_disruptions", "Returns all active disruptions affecting a shipment."),
+                ("recommend_route",          "Recommends alternative routes for a disrupted shipment."),
+                ("recommend_vehicle",        "Recommends the best available vehicle for a shipment."),
+                ("get_fleet_status",         "Returns fleet utilisation summary across all vessels."),
+                ("get_temperature_alerts",   "Returns cold-chain temperature excursion alerts."),
+                ("explain_shipment",         "Generates an AI explanation via IBM watsonx.ai."),
+            ]
+            tools_html = ""
+            for tname, tdesc in _MCP_TOOLS:
+                tools_html += (
+                    f'<div class="sr-mcp-tool">'
+                    f'<span class="sr-mcp-check">✓</span>'
+                    f'<div>'
+                    f'<div class="sr-mcp-name">{tname}</div>'
+                    f'<div class="sr-mcp-desc">{tdesc}</div>'
+                    f'</div></div>'
+                )
+            st.markdown(
+                f'<div class="sr-card" style="padding:14px 16px;">'
+                f'<div style="font-size:.68rem;color:#475569;text-transform:uppercase;letter-spacing:.08em;'
+                f'font-weight:700;margin-bottom:8px;">IBM BOB MCP SERVER — 7 TOOLS</div>'
+                f'{tools_html}</div>',
+                unsafe_allow_html=True,
+            )
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -1536,6 +1985,8 @@ def page_disruptions():
     st.divider()
     _section("Disruption Detail")
     disr_ids = [d["id"] for d in active]
+    if "sel_disruption" in st.session_state and st.session_state["sel_disruption"] not in disr_ids:
+        del st.session_state["sel_disruption"]
     sel_disr = st.selectbox("Select a disruption", disr_ids, key="sel_disruption")
     if not sel_disr:
         return
@@ -1643,6 +2094,8 @@ def page_fleet():
     st.divider()
     _section("Vehicle Recommendation Picker")
     shp_ids = [s["id"] for s in cached_shipments()]
+    if "fleet_shp" in st.session_state and st.session_state["fleet_shp"] not in shp_ids:
+        del st.session_state["fleet_shp"]
     sel_shp = st.selectbox("Select a shipment to find the best vehicle", shp_ids, key="fleet_shp")
     if not sel_shp:
         return
@@ -1721,6 +2174,8 @@ def page_cold_chain():
         _empty("No temperature data available.", "📭")
         return
 
+    if "sel_cold" in st.session_state and st.session_state["sel_cold"] not in cold_shp_ids:
+        del st.session_state["sel_cold"]
     sel_cold = st.selectbox("Select a cold-chain shipment", cold_shp_ids, key="sel_cold")
     if not sel_cold:
         return
@@ -1857,48 +2312,64 @@ NAV_TABS = [
     ("Cold Chain",  "🌡️"),
 ]
 
-# Extra CSS injected once to style the nav buttons as tabs
+# Robust CSS injected once to style the nav buttons specifically
 _TOPNAV_BTN_CSS = """
 <style>
 /* ── Top-nav Streamlit button overrides ── */
-[data-testid="stMainBlockContainer"] > div:first-child
-  [data-testid="stHorizontalBlock"] button {
+button[key^="topnav_btn_"],
+div[data-testid="stColumn"] button[aria-label*="Dashboard"],
+div[data-testid="stColumn"] button[aria-label*="Shipments"],
+div[data-testid="stColumn"] button[aria-label*="Disruptions"],
+div[data-testid="stColumn"] button[aria-label*="Fleet"],
+div[data-testid="stColumn"] button[aria-label*="Cold Chain"] {
   background: transparent !important;
-  border: 1px solid transparent !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
   border-radius: 9px !important;
-  color: #64748B !important;
-  font-size: 0.875rem !important;
+  color: #94A3B8 !important;
+  font-size: 0.82rem !important;
   font-weight: 600 !important;
-  padding: 7px 16px !important;
+  padding: 6px 10px !important;
   box-shadow: none !important;
   transition: all 0.18s ease !important;
   letter-spacing: 0 !important;
   width: 100% !important;
+  white-space: nowrap !important;
 }
-[data-testid="stMainBlockContainer"] > div:first-child
-  [data-testid="stHorizontalBlock"] button:hover {
-  background: rgba(255,255,255,0.05) !important;
-  color: #CBD5E1 !important;
-  border-color: rgba(255,255,255,0.08) !important;
+
+/* Inactive nav button hover */
+div[data-testid="stBaseButton-secondary"] button[aria-label*="Dashboard"]:hover,
+div[data-testid="stBaseButton-secondary"] button[aria-label*="Shipments"]:hover,
+div[data-testid="stBaseButton-secondary"] button[aria-label*="Disruptions"]:hover,
+div[data-testid="stBaseButton-secondary"] button[aria-label*="Fleet"]:hover,
+div[data-testid="stBaseButton-secondary"] button[aria-label*="Cold Chain"]:hover {
+  background: rgba(255,255,255,0.08) !important;
+  color: #F1F5F9 !important;
+  border-color: rgba(255,255,255,0.18) !important;
   transform: none !important;
   box-shadow: none !important;
 }
-/* active tab — class added via key prefix "nav_active_" */
-[data-testid="stMainBlockContainer"] > div:first-child
-  [data-testid="stHorizontalBlock"] [data-testid="stBaseButton-secondary"]
-  button {
+
+/* Active tab button styling (Primary button) */
+div[data-testid="stBaseButton-primary"] button[aria-label*="Dashboard"],
+div[data-testid="stBaseButton-primary"] button[aria-label*="Shipments"],
+div[data-testid="stBaseButton-primary"] button[aria-label*="Disruptions"],
+div[data-testid="stBaseButton-primary"] button[aria-label*="Fleet"],
+div[data-testid="stBaseButton-primary"] button[aria-label*="Cold Chain"] {
   color: #38BDF8 !important;
-  background: rgba(56,189,248,0.12) !important;
-  border-color: rgba(56,189,248,0.3) !important;
+  background: rgba(56,189,248,0.14) !important;
+  border: 1px solid rgba(56,189,248,0.4) !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 12px rgba(56,189,248,0.2) !important;
 }
-/* hide the container padding around topnav buttons */
-[data-testid="stMainBlockContainer"] > div:first-child > div:first-child {
-  gap: 0 !important;
-  padding: 0 !important;
-}
-[data-testid="stMainBlockContainer"] > div:first-child
-  [data-testid="stColumn"] {
-  padding: 0 2px !important;
+
+div[data-testid="stBaseButton-primary"] button[aria-label*="Dashboard"]:hover,
+div[data-testid="stBaseButton-primary"] button[aria-label*="Shipments"]:hover,
+div[data-testid="stBaseButton-primary"] button[aria-label*="Disruptions"]:hover,
+div[data-testid="stBaseButton-primary"] button[aria-label*="Fleet"]:hover,
+div[data-testid="stBaseButton-primary"] button[aria-label*="Cold Chain"]:hover {
+  background: rgba(56,189,248,0.22) !important;
+  border-color: rgba(56,189,248,0.5) !important;
+  transform: none !important;
 }
 </style>
 """
@@ -1907,7 +2378,6 @@ _TOPNAV_BTN_CSS = """
 def _render_topnav(ai_on: bool, current_page: str) -> str | None:
     """Render the glassmorphic top nav bar. Returns new page if user clicked a tab."""
 
-    # ── Brand + status bar (pure HTML, no interaction) ─────────────────────
     demo_pill = (
         '<span class="sr-demo-pill">'
         '<span class="sr-demo-pill-dot"></span>● Demo Mode</span>'
@@ -1936,11 +2406,10 @@ def _render_topnav(ai_on: bool, current_page: str) -> str | None:
 """, unsafe_allow_html=True)
 
     # ── Navigation buttons (real Streamlit widgets) ─────────────────────────
-    # Render as a horizontal row of buttons, one per page
+    clicked_page = None
     btn_cols = st.columns(len(NAV_TABS))
     for col, (name, icon) in zip(btn_cols, NAV_TABS):
         is_active = (name == current_page)
-        # Style active tab differently via button_type
         btn_type = "primary" if is_active else "secondary"
         with col:
             if st.button(
@@ -1949,15 +2418,15 @@ def _render_topnav(ai_on: bool, current_page: str) -> str | None:
                 use_container_width=True,
                 type=btn_type,
             ):
-                return name   # caller will handle st.rerun()
+                clicked_page = name
 
     # Draw bottom border under nav buttons
     st.markdown(
         '<div style="border-bottom:1px solid rgba(255,255,255,0.07);'
-        'margin: -8px -2.2rem 0 -2.2rem;"></div>',
+        'margin: -6px -2.2rem 16px -2.2rem;"></div>',
         unsafe_allow_html=True,
     )
-    return None
+    return clicked_page
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -1984,15 +2453,21 @@ def main():
     if "nav" not in st.session_state:
         st.session_state["nav"] = "Dashboard"
 
-    # Render top nav — if a button was clicked it returns the new page name
+    # Render top nav — if any tab button was clicked, update state and rerun
     ai_on = is_watsonx_configured()
     clicked = _render_topnav(ai_on, st.session_state["nav"])
-    if clicked and clicked != st.session_state["nav"]:
+    if clicked:
         st.session_state["nav"] = clicked
         st.rerun()
 
-    # Render the active page
-    pages[st.session_state["nav"]]()
+    # Render active page safely
+    active_page = st.session_state.get("nav", "Dashboard")
+    if active_page in pages:
+        pages[active_page]()
+    else:
+        st.session_state["nav"] = "Dashboard"
+        pages["Dashboard"]()
 
 
 main()
+
