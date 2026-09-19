@@ -174,6 +174,7 @@ def generate_executive_report_html(shipment_id: str) -> str:
     if not alt_rows:
         alt_rows = "<tr><td colspan='5' style='text-align:center;color:#6B7280;'>No rerouting required — shipment on schedule.</td></tr>"
 
+    ai_html = ai_text.replace('\n', '<br>')
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -361,7 +362,7 @@ def generate_executive_report_html(shipment_id: str) -> str:
 
         <div class="section-title">IBM watsonx.ai Strategic Narrative</div>
         <div class="ai-box">
-            {ai_text.replace('\n', '<br>')}
+            {ai_html}
         </div>
 
         <div class="footer">

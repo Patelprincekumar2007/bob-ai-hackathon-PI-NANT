@@ -14,7 +14,7 @@ from fastapi.responses import FileResponse
 
 from core.disruption_detector import load_disruptions, load_shipments, get_disruption_summary, get_shipment_disruptions
 from core.risk_engine import get_risk_summary, score_all_shipments, calculate_risk_by_id
-from core.route_advisor import recommend_alternative_routes
+from core.route_advisor import recommend_alternative_routes, recommend_all_affected, ROUTE_ALTERNATIVES
 from core.fleet_optimizer import get_fleet_summary, get_vehicle_utilisation, recommend_vehicle_for_shipment
 from core.cold_chain_monitor import get_cold_chain_summary, get_temperature_alerts, get_shipment_temperature_status, load_temperature_data
 from core.watsonx_client import generate_ai_explanation, is_watsonx_configured
@@ -81,6 +81,18 @@ def cold_chain():
 @app.get("/api/cold-chain/{sid}")
 def cold_chain_shipment(sid: str):
     return get_shipment_temperature_status(sid)
+
+# ── Routes & Dynamic Corridors ───────────────────────────────────────────────
+@app.get("/api/routes")
+def routes_list():
+    return {
+        "alternatives_catalog": ROUTE_ALTERNATIVES,
+        "affected_recommendations": recommend_all_affected(),
+    }
+
+@app.get("/api/routes/recommend/{sid}")
+def routes_recommend(sid: str):
+    return recommend_alternative_routes(sid)
 
 # ── AI ────────────────────────────────────────────────────────────────────────
 @app.get("/api/ai/status")

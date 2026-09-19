@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { apiFetch, apiPost } from '../api'
 import { Badge, Card, Section, PageHeader, Spinner, Empty, FactorBar, riskColor, DataTable } from './ui'
+import { soundEngine } from './effects'
+import { Search, Sparkles, X, ArrowRight, ShieldCheck, Thermometer } from 'lucide-react'
 
-const RISK_LEVELS = ['All','CRITICAL','HIGH','MEDIUM','LOW']
+const RISK_LEVELS = ['All', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW']
 
-export default function Shipments({ filters }) {
+export default function Shipments() {
   const [scored, setScored]       = useState([])
   const [loading, setLoading]     = useState(true)
   const [riskFilter, setRisk]     = useState('All')
@@ -16,216 +18,367 @@ export default function Shipments({ filters }) {
   const [aiLoading, setAiLoading] = useState(false)
 
   useEffect(() => {
-    apiFetch('/api/shipments').then(d => { setScored(d); setLoading(false) }).catch(() => setLoading(false))
+    apiFetch('/api/shipments')
+      .then(d => { setScored(d); setLoading(false) })
+      .catch(() => setLoading(false))
   }, [])
 
   useEffect(() => {
     if (!selected) return
-    setDetail(null); setAiResult(null); setDL(true)
-    apiFetch(`/api/shipments/${selected}`).then(d => { setDetail(d); setDL(false) }).catch(() => setDL(false))
+    setDetail(null)
+    setAiResult(null)
+    setDL(true)
+    apiFetch(`/api/shipments/${selected}`)
+      .then(d => { setDetail(d); setDL(false) })
+      .catch(() => setDL(false))
   }, [selected])
 
   const filtered = scored.filter(s => {
     if (riskFilter !== 'All' && s.classification !== riskFilter) return false
     if (search) {
       const q = search.toLowerCase()
-      if (!s.shipment_id.toLowerCase().includes(q) && !s.description?.toLowerCase().includes(q)) return false
+      if (!s.shipment_id?.toLowerCase().includes(q) && !s.description?.toLowerCase().includes(q)) return false
     }
     return true
   })
 
   const handleAI = async () => {
     if (!detail) return
+    soundEngine.playChime()
     const { risk, disruptions } = detail
     const rc = risk?.classification || 'UNKNOWN'
     const rs = risk?.score || 0
     const dt = disruptions?.map(d => d.title).join('; ') || 'None'
-    const prompt = `You are a supply chain risk analyst. Shipment ${selected} has a risk score of ${rs}/100 (${rc}). Active disruptions: ${dt}. Provide a brief, actionable explanation for a logistics coordinator.`
+    const prompt = `You are an elite autonomous maritime logistics intelligence analyst. Shipment ${selected} currently exhibits an aggregate composite risk score of ${rs}/100 (${rc}). Active maritime & port disruptions: ${dt}. Provide a precise, actionable, executive explanation with prioritized risk mitigation vectors for the control tower coordinator.`
     setAiLoading(true)
     const r = await apiPost('/api/ai/explain', { prompt }).catch(() => null)
-    setAiResult(r); setAiLoading(false)
+    setAiResult(r)
+    setAiLoading(false)
   }
 
   const columns = [
-    { key: 'shipment_id', label: 'ID', render: v => <span className="font-mono text-xs" style={{ color: '#38BDF8' }}>{v}</span> },
-    { key: 'description', label: 'Description', render: v => <span style={{ color: '#94A3B8' }}>{v}</span> },
-    { key: 'score', label: 'Score', render: (v) => (
-      <div className="flex items-center gap-2">
-        <span className="font-bold text-sm" style={{ color: riskColor(v >= 75 ? 'CRITICAL' : v >= 50 ? 'HIGH' : v >= 25 ? 'MEDIUM' : 'LOW').text }}>{v}</span>
-        <div className="rounded-full overflow-hidden h-1 w-16" style={{ background: 'rgba(255,255,255,0.06)' }}>
-          <div className="h-1 rounded-full" style={{ width: `${v}%`, background: riskColor(v >= 75 ? 'CRITICAL' : v >= 50 ? 'HIGH' : v >= 25 ? 'MEDIUM' : 'LOW').text }} />
+    {
+      key: 'shipment_id',
+      label: 'SHIPMENT ID',
+      render: v => (
+        <span className="font-mono text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200">
+          {v}
+        </span>
+      )
+    },
+    {
+      key: 'description',
+      label: 'CARGO SPEC & VOYAGE',
+      render: (v, r) => (
+        <div>
+          <div className="text-slate-900 font-bold text-xs sm:text-sm">{v}</div>
+          <div className="text-[11px] font-mono text-slate-400 flex items-center gap-1.5 mt-0.5">
+            <span>{r.carrier || 'Global Carrier'}</span>
+            <span>•</span>
+            <span className="text-slate-500">ID: {r.shipment_id}</span>
+          </div>
         </div>
-      </div>
-    )},
-    { key: 'classification', label: 'Risk', render: v => <Badge level={v} label={v} /> },
-    { key: 'status', label: 'Status', render: v => <span style={{ color: '#64748B' }}>{v}</span> },
-    { key: 'delay_days', label: 'Delay (d)', render: v => v > 0 ? <span style={{ color: '#FB923C' }}>+{v}d</span> : <span style={{ color: '#34D399' }}>—</span> },
-    { key: 'requires_cold_chain', label: 'Cold Chain', render: v => v ? <span>❄️</span> : <span style={{ color: '#334155' }}>—</span> },
+      )
+    },
+    {
+      key: 'score',
+      label: 'COMPOSITE RISK',
+      render: (v, r) => {
+        const c = riskColor(r.classification)
+        return (
+          <div className="flex items-center gap-3">
+            <span className="font-mono font-bold text-sm w-7" style={{ color: c.text }}>{v}</span>
+            <div className="rounded-full overflow-hidden h-1.5 w-20 bg-slate-100 border border-slate-200">
+              <div 
+                className="h-full rounded-full transition-all duration-300" 
+                style={{ width: `${v}%`, background: c.dot }} 
+              />
+            </div>
+          </div>
+        )
+      }
+    },
+    {
+      key: 'classification',
+      label: 'STATUS TIER',
+      render: v => <Badge level={v} label={v} />
+    },
+    {
+      key: 'delay_days',
+      label: 'PROJECTED DELAY',
+      render: v => v > 0 ? (
+        <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
+          +{v}d Delay
+        </span>
+      ) : (
+        <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+          On Schedule
+        </span>
+      )
+    },
+    {
+      key: 'requires_cold_chain',
+      label: 'REEFER SPECS',
+      render: v => v ? (
+        <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded bg-cyan-50 text-cyan-700 border border-cyan-200">
+          <Thermometer size={12} />
+          Active Reefer
+        </span>
+      ) : (
+        <span className="text-slate-400 font-mono text-xs">— Standard Dry</span>
+      )
+    },
   ]
 
   return (
-    <div className="fade-in">
-      <PageHeader title="📋 Shipments" subtitle="Risk-scored shipment register with disruption, route and AI analysis" />
+    <div className="space-y-6 animate-fade-in">
+      {/* ── Top Header & Panoramic Hero Banner ────────────────────────────── */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-blue-500 text-base">✦</span>
+            <h1 className="text-2xl font-black font-head tracking-tight text-slate-900">
+              Shipments & Consignments
+            </h1>
+          </div>
+          <p className="text-xs text-slate-500 mt-1 font-sans">
+            Track multi-echelon active cargo telemetry, risk stratification, and watsonx dispatch advisories.
+          </p>
+        </div>
 
-      {/* Filters row */}
-      <div className="flex flex-wrap gap-3 mb-4">
-        <input
-          className="flex-1 min-w-48 rounded-lg px-3 py-2 text-sm outline-none transition-all"
-          style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.09)', color: '#F1F5F9' }}
-          placeholder="🔍  Search by ID or description…"
-          value={search} onChange={e => setSearch(e.target.value)}
-          onFocus={e => e.target.style.borderColor='#38BDF8'}
-          onBlur={e => e.target.style.borderColor='rgba(255,255,255,0.09)'}
-        />
-        <div className="flex gap-1 rounded-lg p-1" style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.07)' }}>
-          {RISK_LEVELS.map(l => (
-            <button key={l} onClick={() => setRisk(l)}
-              className="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
-              style={{
-                background: riskFilter === l ? (l === 'All' ? '#1E3A5F' : riskColor(l).bg) : 'transparent',
-                color: riskFilter === l ? (l === 'All' ? '#38BDF8' : riskColor(l).text) : '#475569',
-              }}
-            >{l}</button>
-          ))}
+        {/* Hero Photo Banner Card ("Precision Logistics. Global Integrity.") */}
+        <div className="relative rounded-2xl overflow-hidden shadow-xs border border-slate-200/80 w-full lg:w-[480px] h-[78px] flex-shrink-0 group">
+          <img 
+            src="/images/shipment_hero.jpg" 
+            alt="Precision Logistics - Container Port Terminal"
+            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-sky-950/75 via-blue-900/40 to-transparent flex items-center px-6">
+            <div>
+              <p className="text-white font-serif italic text-base md:text-lg tracking-wide drop-shadow-md">
+                “Precision Logistics. Global Integrity.”
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
+      {/* Control bar: search & risk filter */}
+      <div className="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="relative flex-1">
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <input
+            className="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            placeholder="Filter consignments by ID, cargo classification, or destination..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+
+        <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200/60 overflow-x-auto">
+          {RISK_LEVELS.map(l => {
+            const isSel = riskFilter === l
+            return (
+              <button
+                key={l}
+                onClick={() => {
+                  soundEngine.playClick()
+                  setRisk(l)
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  isSel 
+                    ? 'bg-blue-600 text-white shadow-xs' 
+                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/60'
+                }`}
+              >
+                {l}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Main content table */}
       {loading ? <Spinner /> : (
         <>
-          <Section title={`${filtered.length} Shipments`} />
-          {filtered.length === 0 ? <Empty icon="🔍" message="No shipments match the filters." /> : (
-            <div onClick={e => {
-              const row = e.target.closest('tr')
-              if (row) {
-                const id = row.querySelector('span.font-mono')?.textContent
-                if (id) setSelected(id)
-              }
-            }} className="cursor-pointer">
-              <DataTable columns={columns} rows={filtered} />
-            </div>
+          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 px-1">
+            <span>SHOWING <b className="text-slate-900">{filtered.length}</b> OF <b className="text-slate-900">{scored.length}</b> ACTIVE CONSIGNMENTS</span>
+            <span className="text-blue-600">Click any row to open Deep Telemetry Inspector</span>
+          </div>
+
+          {filtered.length === 0 ? (
+            <Empty icon="🔍" message="No consignments match the specified criteria." />
+          ) : (
+            <DataTable
+              columns={columns}
+              rows={filtered}
+              onRowClick={row => {
+                soundEngine.playClick()
+                setSelected(row.shipment_id)
+              }}
+            />
           )}
         </>
       )}
 
-      {/* Detail panel */}
+      {/* Deep Telemetry Inspector Drawer */}
       {selected && (
-        <div className="mt-6 fade-in">
-          <Section title={`Detail — ${selected}`} />
+        <div className="mt-6 pt-5 border-t border-slate-200 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-ping" />
+              <h2 className="font-head text-lg font-bold text-slate-900">
+                DEEP TELEMETRY INSPECTION — <span className="text-blue-600 font-mono">{selected}</span>
+              </h2>
+            </div>
+            <button
+              onClick={() => {
+                soundEngine.playClick()
+                setSelected(null)
+              }}
+              className="text-xs font-bold px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors shadow-xs"
+            >
+              CLOSE INSPECTOR [ESC]
+            </button>
+          </div>
+
           {detailLoading ? <Spinner /> : detail ? (
-            <>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Shipment info */}
-                <Card className="p-5">
-                  <div className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#334155' }}>Shipment Info</div>
-                  {[
-                    ['ID', <span className="font-mono text-xs" style={{ color: '#38BDF8' }}>{selected}</span>],
-                    ['Description', detail.raw?.description],
-                    ['Carrier', detail.raw?.carrier],
-                    ['Origin', `${detail.raw?.origin?.city} · ${detail.raw?.origin?.country}`],
-                    ['Destination', `${detail.raw?.destination?.city} · ${detail.raw?.destination?.country}`],
-                    ['Status', detail.raw?.status],
-                    ['Priority', detail.raw?.priority],
-                    ['Cargo', detail.raw?.cargo_type],
-                  ].map(([k, v]) => (
-                    <div key={k} className="flex items-start gap-2 mb-2">
-                      <span className="text-xs w-24 flex-shrink-0 pt-0.5" style={{ color: '#475569' }}>{k}</span>
-                      <span className="text-sm font-medium" style={{ color: '#F1F5F9' }}>{v}</span>
+            <div className="space-y-5">
+              {/* Primary overview banner */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                {/* Consignment Profile */}
+                <Card className="lg:col-span-2 p-6">
+                  <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Consignment Profile</div>
+                      <div className="text-lg font-head font-bold text-slate-900 mt-0.5">{detail.raw?.description}</div>
                     </div>
-                  ))}
+                    <Badge level={detail.risk?.classification} label={detail.risk?.classification} />
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
+                    <div>
+                      <div className="text-slate-400 text-[10px] uppercase font-semibold">CARRIER VESSEL</div>
+                      <div className="text-slate-900 font-bold mt-0.5">{detail.raw?.carrier || '—'}</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-400 text-[10px] uppercase font-semibold">CARGO TYPE</div>
+                      <div className="text-slate-900 font-bold mt-0.5">{detail.raw?.cargo_type || '—'}</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-400 text-[10px] uppercase font-semibold">STATUS</div>
+                      <div className="text-blue-600 font-bold mt-0.5">{detail.raw?.status || 'Active'}</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-400 text-[10px] uppercase font-semibold">ORIGIN HUB</div>
+                      <div className="text-slate-900 font-bold mt-0.5">{detail.raw?.origin?.city}, {detail.raw?.origin?.country}</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-400 text-[10px] uppercase font-semibold">DESTINATION PORT</div>
+                      <div className="text-slate-900 font-bold mt-0.5">{detail.raw?.destination?.city}, {detail.raw?.destination?.country}</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-400 text-[10px] uppercase font-semibold">DISPATCH PRIORITY</div>
+                      <div className="text-amber-600 font-bold mt-0.5">{detail.raw?.priority || 'Standard'}</div>
+                    </div>
+                  </div>
+
+                  {/* Route corridor transit visualization */}
+                  <div className="mt-5 pt-4 border-t border-slate-100">
+                    <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 mb-2">
+                      <span className="text-blue-600 font-bold">
+                        {detail.raw?.origin?.city} (Departure)
+                      </span>
+                      <span className="text-slate-400">In Transit Across Maritime Waypoint</span>
+                      <span className="text-emerald-600 font-bold">
+                        {detail.raw?.destination?.city} (Terminal)
+                      </span>
+                    </div>
+                    <div className="relative h-2 rounded-full bg-slate-100 overflow-hidden border border-slate-200">
+                      <div className="absolute top-0 left-0 bottom-0 w-3/5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full" />
+                    </div>
+                  </div>
                 </Card>
 
-                {/* Risk assessment */}
-                <Card className="p-5">
-                  <div className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#334155' }}>Risk Assessment</div>
-                  {detail.risk && (
-                    <>
-                      <div className="flex items-end gap-3 mb-4">
-                        <span className="font-head text-5xl font-extrabold" style={{ color: riskColor(detail.risk.classification).text, letterSpacing: '-0.04em' }}>
-                          {detail.risk.score}
-                        </span>
-                        <div>
-                          <div className="text-xs" style={{ color: '#475569' }}>/ 100</div>
-                          <Badge level={detail.risk.classification} label={detail.risk.classification} />
+                {/* Risk score breakdown */}
+                <Card className="p-6 flex flex-col justify-between">
+                  <div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                      Risk Stratification
+                    </div>
+                    {detail.risk && (
+                      <>
+                        <div className="flex items-baseline gap-2 mb-4">
+                          <span 
+                            className="font-head text-5xl font-extrabold tracking-tight"
+                            style={{ color: riskColor(detail.risk.classification).text }}
+                          >
+                            {detail.risk.score}
+                          </span>
+                          <div>
+                            <span className="text-xs font-mono text-slate-400">/ 100 COMPOSITE</span>
+                            <div className="text-xs font-bold text-slate-700 mt-0.5">
+                              {detail.risk.classification} HAZARD
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      {Object.entries({
-                        'Disruption Severity': [detail.risk.factor_breakdown?.disruption_severity, 35],
-                        'Delay Factor':        [detail.risk.factor_breakdown?.delay, 25],
-                        'Deadline Pressure':   [detail.risk.factor_breakdown?.deadline_pressure, 20],
-                        'Priority Factor':     [detail.risk.factor_breakdown?.priority, 15],
-                        'Cold-Chain Factor':   [detail.risk.factor_breakdown?.cold_chain, 5],
-                      }).map(([k,[v,m]]) => <FactorBar key={k} label={k} val={v||0} max={m} />)}
-                    </>
-                  )}
+
+                        <div className="space-y-2.5">
+                          {Object.entries({
+                            'Disruption Impact': [detail.risk.factor_breakdown?.disruption_severity, 35],
+                            'Waypoint Delay':    [detail.risk.factor_breakdown?.delay, 25],
+                            'SLA Pressure':      [detail.risk.factor_breakdown?.deadline_pressure, 20],
+                            'Cargo Priority':    [detail.risk.factor_breakdown?.priority, 15],
+                            'Thermal Excursion': [detail.risk.factor_breakdown?.cold_chain, 5],
+                          }).map(([k, [v, m]]) => (
+                            <FactorBar key={k} label={k} val={v || 0} max={m} />
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </Card>
               </div>
 
-              {/* Disruptions */}
-              {detail.disruptions?.length > 0 && (
-                <>
-                  <Section title="Active Disruptions" />
-                  {detail.disruptions.map(d => {
-                    const c = riskColor(d.severity)
-                    return (
-                      <Card key={d.id} className="p-4 mb-2" accent={c.text}>
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge level={d.severity} label={d.severity} />
-                          <span className="font-semibold text-sm" style={{ color: '#F1F5F9' }}>{d.title}</span>
-                          <span className="text-xs ml-auto" style={{ color: '#475569' }}>+{d.estimated_delay_days}d · +${d.additional_cost_usd?.toLocaleString()}</span>
-                        </div>
-                        <p className="text-xs" style={{ color: '#64748B' }}>{d.description}</p>
-                      </Card>
-                    )
-                  })}
-                </>
-              )}
+              {/* watsonx AI Neural Advisory */}
+              <div className="p-6 bg-gradient-to-br from-blue-50 via-indigo-50/50 to-white rounded-2xl border border-blue-200/80 shadow-xs space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm flex-shrink-0">
+                      <Sparkles size={20} />
+                    </div>
+                    <div>
+                      <h4 className="font-head font-bold text-slate-900 text-sm flex items-center gap-2">
+                        watsonx.ai Autonomous Advisory
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-semibold">
+                          IBM GRANITE MODEL
+                        </span>
+                      </h4>
+                      <p className="text-xs text-slate-500">Synthesizes real-time mitigation vectors for the control tower coordinator.</p>
+                    </div>
+                  </div>
 
-              {/* Route alternatives */}
-              {detail.routes?.alternatives?.length > 0 && (
-                <>
-                  <Section title="Route Alternatives" />
-                  {detail.routes.alternatives.map((alt, i) => (
-                    <Card key={i} className="p-4 mb-2">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-semibold text-sm" style={{ color: '#F1F5F9' }}>Option {i+1}: {alt.description}</span>
-                        <div className="flex gap-2">
-                          <span className="text-xs px-2 py-0.5 rounded" style={{ background: 'rgba(251,146,60,0.1)', color: '#FB923C' }}>
-                            {alt.extra_delay_days >= 0 ? `+${alt.extra_delay_days}d` : `${Math.abs(alt.extra_delay_days)}d faster`}
-                          </span>
-                          <span className="text-xs px-2 py-0.5 rounded" style={{ background: 'rgba(56,189,248,0.1)', color: '#38BDF8' }}>
-                            +${alt.extra_cost_usd?.toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                      <p className="text-xs" style={{ color: '#64748B' }}>{alt.reason}</p>
-                    </Card>
-                  ))}
-                </>
-              )}
-
-              {/* AI Explanation */}
-              <Section title="AI Risk Explanation" />
-              <Card className="p-5" style={{ background: 'linear-gradient(135deg, rgba(56,189,248,0.04), rgba(129,140,248,0.04))', borderColor: 'rgba(56,189,248,0.12)' }}>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="font-head font-bold text-sm" style={{ color: '#F1F5F9' }}>Generate AI Analysis</span>
-                  <span className="text-xs px-2 py-1 rounded-full" style={{ background: 'rgba(56,189,248,0.1)', color: '#38BDF8', border: '1px solid rgba(56,189,248,0.2)' }}>
-                    <span className="pulse-dot inline-block w-1.5 h-1.5 rounded-full mr-1.5 align-middle" style={{ background: '#38BDF8' }}></span>
-                    watsonx.ai
-                  </span>
+                  <button
+                    onClick={handleAI}
+                    disabled={aiLoading}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-colors flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {aiLoading ? 'Synthesizing...' : 'Generate AI Advisory'}
+                  </button>
                 </div>
-                <button onClick={handleAI} disabled={aiLoading}
-                  className="px-5 py-2.5 rounded-lg font-bold text-sm transition-all disabled:opacity-50"
-                  style={{ background: 'linear-gradient(135deg,#38BDF8,#818CF8)', color: '#070B14', boxShadow: '0 4px 15px rgba(56,189,248,0.25)' }}
-                >
-                  {aiLoading ? 'Analysing…' : 'Generate Explanation'}
-                </button>
+
                 {aiResult && (
-                  <div className="mt-4 p-4 rounded-xl" style={{ background: '#0D1424', border: '1px solid rgba(56,189,248,0.15)' }}>
-                    <p className="text-sm leading-relaxed" style={{ color: '#94A3B8' }}>{aiResult.text}</p>
+                  <div className="p-4 bg-white rounded-xl border border-blue-200 text-xs text-slate-800 leading-relaxed shadow-xs">
+                    <div className="font-bold text-blue-600 mb-1 flex items-center gap-1.5">
+                      <ShieldCheck size={14} />
+                      <span>Synthesized Disruption Mitigation Vector:</span>
+                    </div>
+                    <p className="whitespace-pre-line text-slate-700 font-sans">{aiResult.text}</p>
                   </div>
                 )}
-              </Card>
-            </>
+              </div>
+
+            </div>
           ) : null}
         </div>
       )}

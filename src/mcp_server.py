@@ -60,7 +60,6 @@ from core.fleet_optimizer import (
 )
 from core.cold_chain_monitor import get_temperature_alerts as _get_temp_alerts
 from core.watsonx_client import generate_ai_explanation, is_watsonx_configured
-from core.decision_engine import analyse_shipment, build_watsonx_prompt
 
 # ---------------------------------------------------------------------------
 # MCP SDK import with graceful fallback
@@ -210,11 +209,8 @@ def tool_explain_shipment(shipment_id: str) -> dict:
     """
     Generate an AI-powered natural-language explanation for a shipment's situation.
 
-    Uses the SmartRoute AI decision engine to produce a structured analysis
-    (risk, disruptions, recommended action, route options, cold-chain, vehicle),
-    then passes the full context to IBM watsonx.ai for a concise plain-English
-    explanation.  Returns a clearly-labelled mock response when credentials are
-    absent or the mcp package is not installed.
+    Uses IBM watsonx.ai if credentials are configured; returns a clearly-labelled
+    mock response otherwise.
 
     Parameters
     ----------
@@ -222,36 +218,40 @@ def tool_explain_shipment(shipment_id: str) -> dict:
 
     Returns
     -------
-    dict  { shipment_id, explanation, source, ai_powered, model_id,
-            recommended_action, risk_level, escalation_required }
+    dict  { shipment_id, explanation, source, ai_powered }
     """
-    # Full structured analysis from the decision engine
-    analysis = analyse_shipment(shipment_id)
-
-    if analysis.get("error"):
-        prompt = (
-            "You are a supply chain advisor. "
-            "Shipment '%s' was not found in the system. "
-            "Please inform the user politely and suggest checking the shipment ID."
-            % shipment_id
-        )
+    # Build a rich prompt using real data
+    risk = calculate_risk_by_id(shipment_id)
+    if risk is None:
+        prompt = "Shipment %s was not found in the system." % shipment_id
     else:
-        # Rich, structured prompt with full operational context
-        prompt = build_watsonx_prompt(analysis)
+        disruptions = risk.get("disruptions", [])
+        disr_summary = (
+            ", ".join(d["title"] for d in disruptions) if disruptions else "none"
+        )
+        prompt = (
+            "You are a supply chain risk advisor. "
+            "Explain in plain English the current situation for shipment %s. "
+            "Risk score: %d/100 (%s). "
+            "Active disruptions: %s. "
+            "Risk explanation: %s "
+            "Provide a brief (3-4 sentence) advisory for the logistics coordinator."
+            % (
+                shipment_id,
+                risk["score"],
+                risk["classification"],
+                disr_summary,
+                risk["explanation"],
+            )
+        )
 
     ai_result = generate_ai_explanation(prompt)
     return {
-        "shipment_id":         shipment_id,
-        "explanation":         ai_result["text"],
-        "source":              ai_result["source"],
-        "ai_powered":          ai_result["source"] == "watsonx",
-        "model_id":            ai_result["model_id"],
-        # Include key structured outputs for IBM Bob to surface
-        "recommended_action":  analysis.get("recommended_action", "N/A"),
-        "risk_level":          analysis.get("risk_level", "UNKNOWN"),
-        "risk_score":          analysis.get("risk_score", 0),
-        "escalation_required": analysis.get("escalation_required", False),
-        "action_priority":     analysis.get("action_priority", "MEDIUM"),
+        "shipment_id": shipment_id,
+        "explanation": ai_result["text"],
+        "source": ai_result["source"],
+        "ai_powered": ai_result["source"] == "watsonx",
+        "model_id": ai_result["model_id"],
     }
 
 
@@ -292,11 +292,7 @@ TOOLS = {
     },
     "explain_shipment": {
         "fn": tool_explain_shipment,
-        "description": (
-            "Generate a structured AI explanation for a shipment's risk situation. "
-            "Returns the risk level, recommended operational action, escalation status, "
-            "and a plain-English summary via IBM watsonx.ai (Granite LLM)."
-        ),
+        "description": "Generate an AI explanation for a shipment's risk situation.",
         "required_params": ["shipment_id"],
     },
 }
