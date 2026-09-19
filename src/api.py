@@ -49,13 +49,23 @@ def shipments():
 
 @app.get("/api/shipments/{sid}")
 def shipment_detail(sid: str):
+    analysis = analyse_shipment(sid)
     risk   = calculate_risk_by_id(sid)
     disrs  = get_shipment_disruptions(sid)
     routes = recommend_alternative_routes(sid)
     veh    = recommend_vehicle_for_shipment(sid)
     raw    = next((s for s in load_shipments() if s["id"] == sid), None)
     cold   = get_shipment_temperature_status(sid) if raw and raw.get("requires_cold_chain") else None
-    return dict(risk=risk, disruptions=disrs, routes=routes, vehicle=veh, cold=cold, raw=raw)
+    return dict(
+        risk=risk,
+        disruptions=disrs,
+        routes=routes,
+        vehicle=veh,
+        cold=cold,
+        raw=raw,
+        ml_prediction=analysis.get("ml_delay_prediction"),
+        decision_analysis=analysis
+    )
 
 # ── Disruptions ──────────────────────────────────────────────────────────────
 @app.get("/api/disruptions")

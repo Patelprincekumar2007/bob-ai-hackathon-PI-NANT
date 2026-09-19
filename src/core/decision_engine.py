@@ -353,6 +353,7 @@ def analyse_shipment(shipment_id: str) -> dict:
         "escalation_required": escalation_required,
         "escalation_reasons": escalation_reasons,
         "data_sources": data_sources,
+        "ml_delay_prediction": route_result.get("ml_delay_prediction", {}),
     }
 
 
