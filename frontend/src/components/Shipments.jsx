@@ -16,6 +16,8 @@ export default function Shipments() {
   const [detailLoading, setDL]    = useState(false)
   const [aiResult, setAiResult]   = useState(null)
   const [aiLoading, setAiLoading] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [predictionResult, setPredictionResult] = useState(null)
 
   useEffect(() => {
     apiFetch('/api/shipments')
@@ -45,12 +47,28 @@ export default function Shipments() {
   const handleAI = async () => {
     if (!detail) return
     soundEngine.playChime()
-    const { risk, disruptions } = detail
-    const rc = risk?.classification || 'UNKNOWN'
-    const rs = risk?.score || 0
-    const dt = disruptions?.map(d => d.title).join('; ') || 'None'
-    const prompt = `You are an elite autonomous maritime logistics intelligence analyst. Shipment ${selected} currently exhibits an aggregate composite risk score of ${rs}/100 (${rc}). Active maritime & port disruptions: ${dt}. Provide a precise, actionable, executive explanation with prioritized risk mitigation vectors for the control tower coordinator.`
+    setModalOpen(true)
     setAiLoading(true)
+    setPredictionResult(null)
+    setAiResult(null)
+
+    // 1. Get ML Features
+    const features = await apiFetch(`/api/ml/features/${selected}`).catch(() => null)
+    if (!features) {
+      setAiLoading(false)
+      return
+    }
+
+    // 2. Predict Delay
+    const predRes = await apiPost('/api/ml/predict', features).catch(() => null)
+    const predictedDays = predRes?.success ? predRes.prediction : 0
+    setPredictionResult(predictedDays)
+
+    // 3. Gemini Explain
+    const { risk, disruptions } = detail
+    const dt = disruptions?.map(d => d.title).join('; ') || 'None'
+    const prompt = `You are an elite autonomous maritime logistics intelligence analyst. Shipment ${selected} has a ML-predicted delay of ${predictedDays.toFixed(1)} days. Active disruptions & congestion: ${dt}. Risk level: ${risk?.classification}. Provide a precise executive summary explaining this delay prediction and prioritized mitigation vectors.`
+    
     const r = await apiPost('/api/ai/explain', { prompt }).catch(() => null)
     setAiResult(r)
     setAiLoading(false)
@@ -340,7 +358,7 @@ export default function Shipments() {
                 </Card>
               </div>
 
-              {/* watsonx AI Neural Advisory */}
+              {/* AI Neural Advisory (Gemini + Model) Button */}
               <div className="p-6 bg-gradient-to-br from-blue-50 via-indigo-50/50 to-white rounded-2xl border border-blue-200/80 shadow-xs space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -349,37 +367,83 @@ export default function Shipments() {
                     </div>
                     <div>
                       <h4 className="font-head font-bold text-slate-900 text-sm flex items-center gap-2">
-                        watsonx.ai Autonomous Advisory
+                        AI Autonomous Advisory
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-semibold">
-                          IBM GRANITE MODEL
+                          OUR MODEL + GEMINI
                         </span>
                       </h4>
-                      <p className="text-xs text-slate-500">Synthesizes real-time mitigation vectors for the control tower coordinator.</p>
+                      <p className="text-xs text-slate-500">Synthesizes ML predicted delay and congestion mitigation vectors.</p>
                     </div>
                   </div>
 
                   <button
                     onClick={handleAI}
-                    disabled={aiLoading}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-colors flex items-center gap-2 disabled:opacity-50"
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-colors flex items-center gap-2"
                   >
-                    {aiLoading ? 'Synthesizing...' : 'Generate AI Advisory'}
+                    Analyze Delay Prediction
                   </button>
                 </div>
-
-                {aiResult && (
-                  <div className="p-4 bg-white rounded-xl border border-blue-200 text-xs text-slate-800 leading-relaxed shadow-xs">
-                    <div className="font-bold text-blue-600 mb-1 flex items-center gap-1.5">
-                      <ShieldCheck size={14} />
-                      <span>Synthesized Disruption Mitigation Vector:</span>
-                    </div>
-                    <p className="whitespace-pre-line text-slate-700 font-sans">{aiResult.text}</p>
-                  </div>
-                )}
               </div>
 
             </div>
           ) : null}
+        </div>
+      )}
+
+      {/* Modal for Prediction + Gemini */}
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/80 w-full max-w-2xl overflow-hidden animate-fade-in duration-200">
+            <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50">
+              <h3 className="font-head font-bold text-slate-900 flex items-center gap-2">
+                <Sparkles size={18} className="text-blue-600" />
+                AI Delay Prediction & Synthesis
+              </h3>
+              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-200 transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-5">
+              {aiLoading ? (
+                <div className="flex flex-col items-center justify-center py-10">
+                  <Spinner />
+                  <p className="text-xs text-slate-500 mt-4 font-mono">Running ML Prediction Engine & Generating Gemini Synthesis...</p>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-5 bg-gradient-to-r from-blue-50 to-indigo-50 p-5 rounded-2xl border border-blue-100 shadow-inner">
+                    <div className="w-14 h-14 rounded-full bg-blue-600 text-white flex items-center justify-center text-2xl font-black font-head shadow-md flex-shrink-0">
+                      {predictionResult?.toFixed(1) || '0.0'}
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900">Predicted Delay (Days)</h4>
+                      <p className="text-xs text-slate-500 mt-0.5">Computed via Random Forest Engine based on real-time features.</p>
+                    </div>
+                  </div>
+
+                  {aiResult && (
+                    <div className="text-sm text-slate-700 leading-relaxed max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                      <div className="font-bold text-blue-600 mb-2 flex items-center gap-1.5">
+                        <ShieldCheck size={16} />
+                        <span>Gemini Executive Synthesis:</span>
+                      </div>
+                      <p className="whitespace-pre-wrap font-sans bg-white p-4 rounded-xl border border-slate-200 shadow-xs">{aiResult.text}</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+            
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+              <button 
+                onClick={() => setModalOpen(false)}
+                className="px-5 py-2.5 rounded-xl text-xs font-bold bg-slate-200 hover:bg-slate-300 text-slate-800 transition-colors shadow-xs"
+              >
+                Close Synthesis
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

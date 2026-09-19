@@ -36,6 +36,7 @@ export default function AiAssistant() {
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [loadingPhase, setLoadingPhase] = useState('')
   const [configured, setConfigured] = useState(false)
   const chatEndRef = useRef(null)
 
@@ -83,18 +84,45 @@ export default function AiAssistant() {
     setMessages(prev => [...prev, userMsg])
     setInput('')
     setLoading(true)
+    setLoadingPhase('Analyzing intent...')
 
     try {
-      const response = await apiPost('/api/ai/explain', { prompt: query })
+      // 1. Check for shipment ID in the query
+      const sidMatch = query.match(/SHP-00[1-9]/i)
+      let mlContext = ""
+      let mlDelay = null
+
+      if (sidMatch) {
+        const sid = sidMatch[0].toUpperCase()
+        setLoadingPhase(`Extracting SmartRoute features for ${sid}...`)
+        
+        // Fetch features
+        const features = await apiFetch(`/api/ml/features/${sid}`)
+        if (!features.error) {
+           setLoadingPhase(`Running Random Forest ML Prediction...`)
+           // Predict delay
+           const predRes = await apiPost('/api/ml/predict', features)
+           if (predRes && predRes.success) {
+               mlDelay = predRes.prediction
+               mlContext = `\n[SYSTEM CONTEXT: The Random Forest ML model has just predicted an expected delay of ${mlDelay} days for ${sid} based on 38 real-time supply chain features. Please explain this prediction and its operational impact.]\n`
+           }
+        }
+      }
+
+      setLoadingPhase('Generating Google Gemini explanation...')
+      const finalPrompt = mlContext ? mlContext + "\nUser Query: " + query : query
+
+      const response = await apiPost('/api/ai/explain', { prompt: finalPrompt })
       soundEngine.playSuccess()
 
       const aiMsg = {
         id: Date.now() + 1,
         sender: 'ai',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        content: response?.text || "Strategic operational assessment generated from deterministic decision models.",
-        model: response?.model_id === 'mock' ? 'IBM Granite Engine (Deterministic Mode)' : (response?.model_id || 'ibm/granite-13b-chat-v2'),
-        source: response?.source || 'watsonx'
+        content: response?.text || "Strategic operational assessment generated.",
+        model: response?.model_id === 'mock' ? 'Deterministic Mode' : (response?.model_id || 'gemini-1.5-flash'),
+        source: response?.source || 'gemini',
+        metrics: mlDelay !== null ? { mlDelayDays: mlDelay } : null
       }
       setMessages(prev => [...prev, aiMsg])
     } catch (err) {
@@ -103,13 +131,14 @@ export default function AiAssistant() {
         id: Date.now() + 1,
         sender: 'ai',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        content: `[IBM Granite Intelligence Advisory]\n\nQuery: "${query}"\n\nOperational Status: Backend connection interrupted. Please ensure the local FastAPI backend service is running on port 8000. All core calculations continue to be managed deterministically by the Python Risk and Decision Engine.`,
-        model: 'ibm/granite-13b-chat-v2',
+        content: `[Intelligence Advisory]\n\nQuery: "${query}"\n\nOperational Status: Backend connection interrupted. Please ensure the local FastAPI backend service is running.`,
+        model: 'Local Backup',
         source: 'local-resilience'
       }
       setMessages(prev => [...prev, fallbackMsg])
     } finally {
       setLoading(false)
+      setLoadingPhase('')
     }
   }
 
@@ -217,16 +246,26 @@ export default function AiAssistant() {
 
                   {/* Optional AI Telemetry Badge */}
                   {m.metrics && (
-                    <div className="pt-2 border-t border-slate-200/60 grid grid-cols-3 gap-2 font-mono text-[10px] text-slate-500">
-                      <div className="bg-white p-1.5 rounded border border-slate-200/60">
-                        <span>Shipments: </span><b className="text-slate-800">{m.metrics.monitoredShipments}</b>
-                      </div>
-                      <div className="bg-white p-1.5 rounded border border-slate-200/60">
-                        <span>Disruptions: </span><b className="text-rose-600">{m.metrics.activeDisruptions}</b>
-                      </div>
-                      <div className="bg-white p-1.5 rounded border border-slate-200/60">
-                        <span>Logic: </span><b className="text-emerald-600">{m.metrics.decisionConfidence}</b>
-                      </div>
+                    <div className="pt-2 border-t border-slate-200/60 grid grid-cols-1 md:grid-cols-3 gap-2 font-mono text-[10px] text-slate-500">
+                      {m.metrics.monitoredShipments !== undefined && (
+                        <>
+                          <div className="bg-white p-1.5 rounded border border-slate-200/60">
+                            <span>Shipments: </span><b className="text-slate-800">{m.metrics.monitoredShipments}</b>
+                          </div>
+                          <div className="bg-white p-1.5 rounded border border-slate-200/60">
+                            <span>Disruptions: </span><b className="text-rose-600">{m.metrics.activeDisruptions}</b>
+                          </div>
+                          <div className="bg-white p-1.5 rounded border border-slate-200/60">
+                            <span>Logic: </span><b className="text-emerald-600">{m.metrics.decisionConfidence}</b>
+                          </div>
+                        </>
+                      )}
+                      {m.metrics.mlDelayDays !== undefined && (
+                        <div className="bg-blue-50/50 p-2 rounded border border-blue-200 col-span-1 md:col-span-3 flex items-center gap-2">
+                          <Zap size={14} className="text-blue-500" />
+                          <span>Random Forest Prediction: <b className="text-blue-700">{m.metrics.mlDelayDays} Days Delay</b></span>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -246,7 +285,7 @@ export default function AiAssistant() {
                 </div>
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/60 flex items-center gap-2">
                   <RefreshCw size={13} className="animate-spin text-blue-600" />
-                  <span>IBM Granite synthesizing deterministic calculations...</span>
+                  <span>{loadingPhase || 'Synthesizing...'}</span>
                 </div>
               </div>
             )}

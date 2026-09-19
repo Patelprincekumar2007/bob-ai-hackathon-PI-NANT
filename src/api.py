@@ -19,6 +19,10 @@ from core.fleet_optimizer import get_fleet_summary, get_vehicle_utilisation, rec
 from core.cold_chain_monitor import get_cold_chain_summary, get_temperature_alerts, get_shipment_temperature_status, load_temperature_data
 from core.watsonx_client import generate_ai_explanation, is_watsonx_configured
 
+from ml.predict_delay import load_trained_model, predict_delay
+from ml.schemas import ShipmentFeatures, PredictResponse
+from ml.feature_mapper import map_shipment_to_features
+
 app = FastAPI(title="SmartRoute AI", version="1.0.0")
 
 app.add_middleware(
@@ -94,13 +98,52 @@ def routes_list():
 def routes_recommend(sid: str):
     return recommend_alternative_routes(sid)
 
+# ── ML Prediction ────────────────────────────────────────────────────────────
+@app.get("/api/ml/health")
+def ml_health():
+    try:
+        pipeline = load_trained_model()
+        # Fallback to string if schema isn't present
+        features = list(ShipmentFeatures.model_fields.keys())
+        return {
+            "loaded": True,
+            "model_type": type(pipeline).__name__,
+            "model_name": "Random Forest Delay Predictor",
+            "features": features
+        }
+    except Exception as e:
+        return {"loaded": False, "error": str(e)}
+
+@app.get("/api/ml/features/{sid}")
+def ml_features(sid: str):
+    raw = next((s for s in load_shipments() if s["id"] == sid), None)
+    if not raw:
+        return {"error": "Shipment not found"}
+    features = map_shipment_to_features(raw)
+    return features
+
+@app.post("/api/ml/predict", response_model=PredictResponse)
+def ml_predict(features: ShipmentFeatures):
+    try:
+        data_dict = features.model_dump()
+        pred = predict_delay(data_dict)
+        return PredictResponse(
+            success=True,
+            prediction=pred,
+            model={"name": "Random Forest", "version": "1.0.0"}
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return PredictResponse(success=False, prediction=0.0, model={"error": str(e)})
+
 # ── AI ────────────────────────────────────────────────────────────────────────
 @app.get("/api/ai/status")
 def ai_status():
     return {"configured": is_watsonx_configured()}
 
 @app.post("/api/ai/explain")
-async def ai_explain(body: dict):
+def ai_explain(body: dict):
     result = generate_ai_explanation(body.get("prompt",""))
     return result
 

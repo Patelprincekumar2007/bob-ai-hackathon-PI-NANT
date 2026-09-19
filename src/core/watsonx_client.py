@@ -55,125 +55,34 @@ except Exception:
     pass
 
 
-def _credentials():
-    """Return credentials dict or None if not configured."""
-    key = (os.environ.get("WATSONX_API_KEY") or os.environ.get("WATSONX_APIKEY") or "").strip()
-    pid = os.environ.get("WATSONX_PROJECT_ID", "").strip()
-    if not key or not pid or key == "your_api_key_here" or pid == "your_project_id_here":
-        return None
-    return {
-        "api_key": key,
-        "project_id": pid,
-        "url": (os.environ.get("WATSONX_URL") or _DEFAULT_URL).strip().rstrip("/"),
-        "model_id": (os.environ.get("WATSONX_MODEL_ID") or _DEFAULT_MODEL).strip(),
-    }
-
-
-def _get_iam_token(api_key: str) -> str:
-    """Exchange IBM Cloud API Key for an IAM OAuth Access Token."""
-    token_url = "https://iam.cloud.ibm.com/identity/token"
-    data = urllib.parse.urlencode({
-        "grant_type": "urn:ibm:params:oauth:grant-type:apikey",
-        "apikey": api_key,
-    }).encode("utf-8")
-
-    req = urllib.request.Request(
-        token_url,
-        data=data,
-        headers={
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Accept": "application/json",
-        },
-        method="POST",
-    )
-    with urllib.request.urlopen(req, timeout=12) as response:
-        payload = json.loads(response.read().decode("utf-8"))
-        return payload.get("access_token", "")
-
-
-def _call_watsonx_rest(prompt: str, creds: dict) -> dict:
-    """Invoke IBM watsonx.ai Text Generation endpoint via standard REST API."""
-    token = _get_iam_token(creds["api_key"])
-    if not token:
-        raise RuntimeError("Failed to obtain IBM IAM access token.")
-
-    generate_url = f"{creds['url']}/ml/v1/text/generation?version=2023-05-29"
-    payload = {
-        "input": prompt,
-        "parameters": {
-            "max_new_tokens": 450,
-            "min_new_tokens": 10,
-            "decoding_method": "sample",
-            "temperature": 0.4,
-            "top_p": 0.85,
-            "repetition_penalty": 1.15,
-        },
-        "model_id": creds["model_id"],
-        "project_id": creds["project_id"],
-    }
-    data = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(
-        generate_url,
-        data=data,
-        headers={
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-        },
-        method="POST",
-    )
-
-    with urllib.request.urlopen(req, timeout=20) as response:
-        res = json.loads(response.read().decode("utf-8"))
-        results = res.get("results", [])
-        if results and "generated_text" in results[0]:
-            text = results[0]["generated_text"].strip()
-            return {
-                "text": text,
-                "source": "watsonx",
-                "model_id": creds["model_id"],
-                "error": None,
-            }
-        raise RuntimeError("No generation results returned from watsonx.")
-
-
-def _call_watsonx(prompt: str, creds: dict) -> dict:
-    """Dispatch watsonx call via SDK if available, or direct official REST API."""
-    # 1. Try SDK if installed
+def _call_gemini(prompt: str, api_key: str) -> dict:
+    """Invoke Google Gemini API."""
     try:
-        from ibm_watsonx_ai import APIClient, Credentials          # type: ignore
-        from ibm_watsonx_ai.foundation_models import ModelInference # type: ignore
-        from ibm_watsonx_ai.metanames import GenTextParamsMetaNames # type: ignore
-
-        client = APIClient(Credentials(url=creds["url"], api_key=creds["api_key"]))
-        params = {
-            GenTextParamsMetaNames.MAX_NEW_TOKENS: 450,
-            GenTextParamsMetaNames.TEMPERATURE: 0.4,
-            GenTextParamsMetaNames.DECODING_METHOD: "sample",
-        }
-        model = ModelInference(
-            model_id=creds["model_id"],
-            api_client=client,
-            project_id=creds["project_id"],
-            params=params,
+        import google.generativeai as genai
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        system_instruction = (
+            "You are an AI assistant for SmartRoute, a maritime logistics application. "
+            "Explain the provided Random Forest ML delay prediction and supply chain context clearly to the user. "
+            "Do NOT invent facts. Only use information provided in the prompt. "
+            "Keep the response structured and concise."
         )
-        text = model.generate_text(prompt=prompt)
+        
+        full_prompt = f"{system_instruction}\n\nContext:\n{prompt}"
+        response = model.generate_content(full_prompt)
+        
         return {
-            "text": text.strip(),
-            "source": "watsonx",
-            "model_id": creds["model_id"],
+            "text": response.text.strip(),
+            "source": "gemini",
+            "model_id": "gemini-1.5-flash",
             "error": None,
         }
     except ImportError:
-        pass
+        logger.error("google-generativeai package not installed.")
+        return _mock(prompt, error="google-generativeai not installed")
     except Exception as exc:
-        logger.warning("watsonx SDK invocation failed (%s), attempting REST API fallback.", exc)
-
-    # 2. Try direct official REST API
-    try:
-        return _call_watsonx_rest(prompt, creds)
-    except Exception as exc:
-        logger.error("watsonx REST call failed: %s", exc)
+        logger.error("Gemini API call failed: %s", exc)
         return _mock(prompt, error=str(exc))
 
 
@@ -340,13 +249,13 @@ def _mock(prompt: str, error: str | None = None) -> dict:
 def generate_ai_explanation(prompt: str) -> dict:
     """
     Generate an AI explanation for the given prompt.
-    Supports live IBM watsonx.ai (REST or SDK) or grounded deterministic synthesis.
+    Supports live Google Gemini or grounded deterministic synthesis.
 
     Returns
     -------
     dict:
         text      (str)        The generated text.
-        source    (str)        "watsonx" or "mock".
+        source    (str)        "gemini" or "mock".
         model_id  (str)        Model used.
         error     (str|None)   Error message if call failed.
     """
@@ -358,16 +267,18 @@ def generate_ai_explanation(prompt: str) -> dict:
             "error": "empty prompt",
         }
 
-    creds = _credentials()
-    if creds is None:
-        logger.info("watsonx credentials not configured — invoking grounded synthesis.")
+    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if not api_key or api_key == "your_api_key_here":
+        logger.info("Gemini credentials not configured — invoking grounded synthesis.")
         return _mock(prompt)
-    return _call_watsonx(prompt, creds)
+    return _call_gemini(prompt, api_key)
 
 
 def is_watsonx_configured() -> bool:
-    """Return True when WATSONX_API_KEY and WATSONX_PROJECT_ID are both set."""
-    return _credentials() is not None
+    """Return True when GEMINI_API_KEY is set."""
+    # Renamed functionally but keeping the same name for backward compatibility
+    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    return bool(api_key and api_key != "your_api_key_here")
 
 
 def set_watsonx_credentials(api_key: str, project_id: str, url: str | None = None, model_id: str | None = None):
