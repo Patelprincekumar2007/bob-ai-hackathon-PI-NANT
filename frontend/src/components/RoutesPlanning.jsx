@@ -360,62 +360,68 @@ export default function RoutesPlanning() {
             </div>
           </div>
 
-          {/* Navigational Vector Diagram */}
-          <div className="relative rounded-xl overflow-hidden bg-[#0A1426] border border-slate-800 p-4 h-56 flex flex-col justify-between text-white">
-            
-            {/* Background SVG routing paths */}
-            <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 600 220">
-              <defs>
-                <linearGradient id="gradBase" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.8" />
-                  <stop offset="100%" stopColor="#be123c" stopOpacity="0.4" />
-                </linearGradient>
-                <linearGradient id="gradAlt" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#38bdf8" stopOpacity="1" />
-                  <stop offset="100%" stopColor="#2563eb" stopOpacity="0.7" />
-                </linearGradient>
-              </defs>
-
-              {/* Base Disrupted Path (Dashed Red) */}
-              <path d="M 60 110 Q 300 40 540 110" fill="none" stroke="url(#gradBase)" strokeWidth="3" strokeDasharray="6 4" />
-              {/* Disruption Icon Zone */}
-              <circle cx="300" cy="75" r="18" fill="#f43f5e" opacity="0.25" className="animate-ping" />
-              <circle cx="300" cy="75" r="8" fill="#f43f5e" />
-
-              {/* AI Recommended Mitigation Corridor (Solid Cyan/Blue Glow) */}
-              <path d="M 60 110 Q 300 180 540 110" fill="none" stroke="url(#gradAlt)" strokeWidth="3.5" />
-              <circle cx="300" cy="145" r="7" fill="#38bdf8" />
-
-              {/* Origin & Destination Nodes */}
-              <circle cx="60" cy="110" r="9" fill="#2563eb" stroke="#ffffff" strokeWidth="2" />
-              <circle cx="540" cy="110" r="9" fill="#10b981" stroke="#ffffff" strokeWidth="2" />
-            </svg>
-
-            {/* Diagram Legend / Indicators */}
-            <div className="relative z-10 flex justify-between text-xs font-mono">
-              <div className="bg-slate-900/90 px-2.5 py-1 rounded border border-white/10 backdrop-blur-xs">
-                <span className="text-slate-400">ORIGIN:</span> <b className="text-white">{currentCorridor.origin.split(' ')[0]}</b>
+          {/* Strategic Corridor Comparison & Feasibility Matrix */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {/* Base Disrupted Corridor Card */}
+            <div className="bg-rose-50/40 rounded-xl p-3.5 border border-rose-200/80 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-rose-700 bg-rose-100/80 px-2 py-0.5 rounded">
+                    Baseline Track
+                  </span>
+                  <span className="text-[11px] font-mono text-rose-600 font-semibold">
+                    Risk: {currentCorridor.currentRiskScore}/100
+                  </span>
+                </div>
+                <div className="text-xs font-bold text-slate-900 mt-2">
+                  Direct Corridor (Disrupted)
+                </div>
+                <div className="text-[11px] text-slate-500 mt-0.5">
+                  Subject to active bottleneck: {currentCorridor.activeDisruption.split('—')[0]}
+                </div>
               </div>
-              <div className="bg-slate-900/90 px-2.5 py-1 rounded border border-white/10 backdrop-blur-xs">
-                <span className="text-slate-400">DESTINATION:</span> <b className="text-white">{currentCorridor.destination.split(' ')[0]}</b>
+
+              <div className="mt-3 pt-2.5 border-t border-rose-200/60 space-y-1.5 text-xs font-mono">
+                <div className="flex items-center justify-between text-slate-600">
+                  <span>Projected Delay:</span>
+                  <span className="font-bold text-rose-700">+{currentAlt.extraDays > 0 ? currentAlt.extraDays + 4 : 5} Days</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-600">
+                  <span>Vulnerability:</span>
+                  <span className="font-bold text-rose-700">Critical (Impassable)</span>
+                </div>
               </div>
             </div>
 
-            {/* Middle Annotation Labels */}
-            <div className="relative z-10 flex justify-between items-center text-[11px] px-8">
-              <div className="bg-rose-950/90 border border-rose-500/80 px-2 py-1 rounded text-rose-200">
-                ⚠ Base Corridor: Impassable / Severe Hazard
+            {/* Watsonx Recommended Contingency Vector */}
+            <div className="bg-sky-50/40 rounded-xl p-3.5 border border-sky-200/80 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-sky-700 bg-sky-100/80 px-2 py-0.5 rounded">
+                    ✦ AI Contingency
+                  </span>
+                  <span className="text-[11px] font-mono text-emerald-600 font-semibold">
+                    Mitigation: {currentAlt.riskMitigationPct}%
+                  </span>
+                </div>
+                <div className="text-xs font-bold text-slate-900 mt-2">
+                  {currentAlt.name}
+                </div>
+                <div className="text-[11px] text-slate-500 mt-0.5">
+                  Via {currentAlt.via} • Mode: {currentAlt.type}
+                </div>
               </div>
-              <div className="bg-sky-950/90 border border-sky-400/80 px-2.5 py-1 rounded text-sky-200 font-semibold shadow-lg">
-                ✦ Watsonx Recommended Divergence ({currentAlt.via})
-              </div>
-            </div>
 
-            {/* Bottom Route Status Bar */}
-            <div className="relative z-10 flex items-center justify-between text-[10px] font-mono text-slate-300 border-t border-white/10 pt-2">
-              <span className="flex items-center gap-1.5"><span className="w-2 h-0.5 bg-red-500 inline-block" /> Base Voyage: +{currentAlt.extraDays > 0 ? currentAlt.extraDays + 4 : 5}d hazard delay</span>
-              <span className="flex items-center gap-1.5"><span className="w-2 h-0.5 bg-sky-400 inline-block" /> Alt Route: Risk Mitigation {currentAlt.riskMitigationPct}%</span>
-              <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" /> Safe Clearance</span>
+              <div className="mt-3 pt-2.5 border-t border-sky-200/60 space-y-1.5 text-xs font-mono">
+                <div className="flex items-center justify-between text-slate-600">
+                  <span>Added Transit:</span>
+                  <span className="font-bold text-slate-800">+{currentAlt.extraDays} Days</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-600">
+                  <span>Budget Delta:</span>
+                  <span className="font-bold text-slate-800">+${currentAlt.extraCost.toLocaleString()}</span>
+                </div>
+              </div>
             </div>
           </div>
 
