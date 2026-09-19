@@ -94,3 +94,7 @@ logs/
 .terraform/
 *.tfstate
 *.tfstate.backup
+
+src/ml/model/*.pkl
+
+~$*.pptx
