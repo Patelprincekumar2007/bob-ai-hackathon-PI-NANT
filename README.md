@@ -31,6 +31,10 @@
 
 ---
 
+## VideoLink of execution:
+https://drive.google.com/file/d/1BKWKyST6HrQKQtWT4d3rUH1JzfjM_zDI/view?usp=sharing
+
+---
 ## 🌐 Overview
 
 **SmartRoute AI** unifies disruption detection, dynamic risk scoring, route optimization, fleet capacity matching, and cold-chain thermal monitoring into an interactive dashboard. 
